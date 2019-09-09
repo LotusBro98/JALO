@@ -184,7 +184,7 @@ int main()
     cv::Mat display;
     video >> frame;
     cv::VideoWriter videoOut("../videos/JALO.avi", cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), video.get(cv::CAP_PROP_FPS), {frame.cols, frame.rows});
-    cv::VideoWriter videoOut2D("../videos/JALO2D.avi", cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), video.get(cv::CAP_PROP_FPS), {500, 500});
+    cv::VideoWriter videoOut2D("../videos/JALO2D.avi", cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), video.get(cv::CAP_PROP_FPS), {500, 510});
 
     camera_matrix.at<float>(0,0) = frame.cols / 2;
     camera_matrix.at<float>(1,1) = frame.cols / 2;
