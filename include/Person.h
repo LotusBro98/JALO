@@ -12,13 +12,12 @@ class Person {
 public:
     Person();
 
-    void setPosition(cv::Point3f position);
-    void setShouldersDirection(cv::Point3f shoulders_dir);
-
-private:
     cv::Point3f position;
     cv::Point3f shoulders_dir;
     cv::Point3f target;
+
+private:
+
 };
 
 

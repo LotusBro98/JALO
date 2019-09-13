@@ -106,8 +106,8 @@ void Camera::detectPeople(float shoulder_height) {
         dir /= cv::norm(dir);
 
         Person person;
-        person.setPosition(center);
-        person.setShouldersDirection(dir);
+        person.position = center;
+        person.shoulders_dir = dir;
         people.push_back(person);
     }
 }
@@ -130,6 +130,12 @@ void Camera::show(Room &room) {
     for (int i = 0; i < cam_points_calib.size(); i++)
     {
         cv::circle(dispFrame, cam_points_calib[i], 3, colors[i], -1);
+    }
+
+    for (auto& person : people)
+    {
+        cv::circle(dispFrame, project(person.position), 2, {0,0,255}, -1);
+        cv::circle(dispFrame, project(person.position + person.shoulders_dir * 0.2), 2, {0,255,255}, -1);
     }
 
     cv::imshow("Cam" + std::to_string(id), dispFrame);

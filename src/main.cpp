@@ -12,6 +12,7 @@ int main()
     jalo::Camera camera(0, "../videos/Воровство в одном из магазинов.mp4");
     jalo::Room room("../models/1st_Floor.stl");
 
+    camera.detectPeople();
     camera.show(room);
     cv::waitKey();
 }
