@@ -21,5 +21,5 @@ void Room::load_model(std::string filename) {
 }
 
 Room::Room(std::string model_filename) {
-    
+
 }
