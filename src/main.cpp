@@ -5,14 +5,13 @@
 #include "Config.h"
 
 #include <opencv2/opencv.hpp>
+#include "Camera.h"
 
 int main()
 {
-    float Rinit[] = {-0.66325486, 0.40076259, -0.63204616, 0.74838018, 0.36022136, -0.55692697, 0.0044810306, -0.84239537, -0.53884137};
-    cv::Mat R(3, 3, CV_32F, Rinit);
+    jalo::Camera camera(0, "../videos/Воровство в одном из магазинов.mp4");
+    jalo::Room room("../models/1st_Floor.stl");
 
-    std::cout << jalo::Config::getMat("R") << "\n";
-
-    jalo::Config::setMat("R", R);
-    jalo::Config::save();
+    camera.show(room);
+    cv::waitKey();
 }

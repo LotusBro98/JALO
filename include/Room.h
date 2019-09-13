@@ -8,15 +8,26 @@
 #include "stlParser.h"
 #include <opencv2/opencv.hpp>
 
+namespace jalo {
+
 class Room {
+    struct Edge {
+        std::vector<cv::Point3f> points;
+        float heat;
+    };
+
 public:
-    Room(std::string model_filename);
+    explicit Room(std::string model_filename);
 
     void load_model(std::string filename);
 
+    std::vector<Edge> model;
+
 private:
-    std::vector<std::vector<cv::Point3f>> model;
+
 };
+
+}
 
 
 #endif //JALO_ROOM_H

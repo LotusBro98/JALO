@@ -8,10 +8,9 @@
 #include <opencv2/opencv.hpp>
 #include <openpose/headers.hpp>
 #include "Person.h"
+#include "Room.h"
 
 namespace jalo {
-
-auto object_points = std::vector<cv::Point3f>{{0, 0, 0}, {0, 1, 0}, {1, 0, 0}, {1, 1, 0}};
 
 class Camera {
 public:
@@ -27,9 +26,11 @@ public:
 
     void capture();
     void detectPeople(float shoulder_height = 1.6);
+    void show(Room& room);
 
 
 private:
+    int id;
     cv::Mat R;
     cv::Vec3f r0;
     cv::Mat camera_matrix;

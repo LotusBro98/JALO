@@ -8,7 +8,10 @@
 
 namespace jalo {
 
+auto object_points = std::vector<cv::Point3f>{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+
 Camera::Camera(int id, const char* source) {
+    this->id = id;
     cap = cv::VideoCapture(source);
     if (!cap.isOpened())
         throw std::runtime_error("Failed to open camera " + std::to_string(id));
@@ -28,8 +31,10 @@ Camera::Camera(int id, const char* source) {
 
     float fov = Config::getFloat("fov");
     fov = fov / 180.0f * M_PIf32;
-    float camera_matrix_data[] = {lastFrame.cols / fov, 0, lastFrame.cols / 2.0f, 0, lastFrame.rows / fov, lastFrame.rows / 2.0f, 0, 0, 1};
-    camera_matrix = cv::Mat(3, 3, CV_32F, camera_matrix_data);
+    float camera_matrix_data[] = {lastFrame.cols / fov, 0, lastFrame.cols / 2.0f, 0, lastFrame.cols / fov, lastFrame.rows / 2.0f, 0, 0, 1};
+    camera_matrix = cv::Mat(3, 3, CV_32F);
+    cv::Mat tocp(3, 3, CV_32F, camera_matrix_data);
+    tocp.copyTo(camera_matrix);
     camera_matrix_inv = camera_matrix.inv();
 
     dist_coeffs = Config::getMat("dist-coeffs");
@@ -40,14 +45,13 @@ Camera::Camera(int id, const char* source) {
 cv::Point2f Camera::project(cv::Point3f point_real) {
     cv::Point3f point = (cv::Vec3f)(cv::Mat)(R.t()*(cv::Mat)(cv::Vec3f(point_real) - r0));
     point /= point.z;
-    point = (cv::Vec3f)(cv::Mat)(camera_matrix*(cv::Mat)(cv::Vec3f(point)));
     return distortPoint({point.x, point.y}, camera_matrix, dist_coeffs);
 }
 
 cv::Point3f Camera::unproject(cv::Point2f point_cam, float z) {
     point_cam = undistortPoint(point_cam, camera_matrix, dist_coeffs);
 
-    cv::Vec3f dir = (cv::Mat) (R * camera_matrix_inv * (cv::Mat)cv::Vec3f(point_cam.x, point_cam.y, 1));
+    cv::Vec3f dir = (cv::Mat) (R * (cv::Mat)cv::Vec3f(point_cam.x, point_cam.y, 1));
     float r = (z-r0[2]) / dir[2];
     cv::Vec3f proj = r0 + (r * dir);
     return proj;
@@ -106,6 +110,29 @@ void Camera::detectPeople(float shoulder_height) {
         person.setShouldersDirection(dir);
         people.push_back(person);
     }
+}
+
+void Camera::show(Room &room) {
+    lastFrame.copyTo(dispFrame);
+    for (int i = 0; i < room.model.size(); i++) {
+        std::vector<cv::Point2f> edge;
+        project(room.model[i].points, edge);
+        std::cout << room.model[i].points << "\n";
+        float heat = room.model[i].heat;
+        cv::Scalar color = cv::Scalar(0, 0, 255) * heat + cv::Scalar(255, 0, 0) * (1 - heat);
+        cv::Mat edgemat(edge);
+        edgemat.convertTo(edgemat, CV_32S);
+        std::cout << edge << "\n";
+        cv::polylines(dispFrame, {edgemat }, true, color);
+    }
+
+    std::vector<cv::Scalar> colors = {{255, 255, 255}, {0, 0, 255}, {0, 255, 0}, {255, 0, 0}};
+    for (int i = 0; i < cam_points_calib.size(); i++)
+    {
+        cv::circle(dispFrame, cam_points_calib[i], 3, colors[i], -1);
+    }
+
+    cv::imshow("Cam" + std::to_string(id), dispFrame);
 }
 
 
