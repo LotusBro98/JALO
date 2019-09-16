@@ -115,4 +115,52 @@ std::vector<Person> Room::getPeople() {
     return people;
 }
 
+void Room::show2D() {
+    float width_real = Config::getFloat("width_real", 11);
+    float height_real = Config::getFloat("height_real", 6);
+    float display_scale = Config::getFloat("display_scale", 100);
+    cv::Point2f center{width_real / 2, height_real / 2};
+    bool text = Config::getBool("draw_text", true);
+
+    cv::Mat canvas(height_real * display_scale, width_real * display_scale, CV_8UC3, {0, 0, 0});
+
+    for (std::map<std::string, Room::Model>::iterator it = objects.begin(); it != objects.end(); it++) {
+        for (int i = 0; i < it->second.edges.size(); i++) {
+            std::vector<cv::Point2f> edge;
+            for (auto &pt : it->second.edges[i].points)
+                edge.push_back((cv::Point2f{pt.x, pt.y} + center) * display_scale);
+            float heat = it->second.hits / 3;
+            if (heat > 1) heat = 1;
+            cv::Scalar color = cv::Scalar(0, 0, 255, 255) * heat + cv::Scalar(255, 0, 0, 255) * (1 - heat);
+            cv::Mat edgemat(edge);
+            edgemat.convertTo(edgemat, CV_32S);
+            cv::fillConvexPoly(canvas, {edgemat}, color);
+        }
+
+        if (text) {
+            cv::Point3f center_of_mass(0, 0, 0);
+            int n = 0;
+            for (auto &edge : it->second.edges) {
+                for (auto &pt : edge.points) {
+                    center_of_mass += pt;
+                    n++;
+                }
+            }
+            center_of_mass /= n;
+            cv::putText(canvas, it->first, (cv::Point2f{center_of_mass.x, center_of_mass.y} + center) * display_scale, cv::FONT_HERSHEY_SIMPLEX,
+                        1,
+                        {255, 255, 255});
+        }
+    }
+
+    for (auto &person : people) {
+        cv::Point2f pos = (cv::Point2f{person.position.x, person.position.y} + center) * display_scale;
+        cv::Point2f tar = person.hit ? (cv::Point2f{person.position.x, person.position.y} + center) * display_scale : pos + cv::Point2f{person.shoulders_dir.x, person.shoulders_dir.y} * display_scale;
+        cv::line(canvas, pos, tar, person.hit ? cv::Scalar{0, 255, 255} : cv::Scalar{0, 255, 0}, -1);
+        cv::circle(canvas, pos, 2, {0, 0, 255}, -1);
+    }
+
+    cv::imshow("Top View", canvas);
+}
+
 }

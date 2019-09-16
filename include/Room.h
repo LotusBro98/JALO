@@ -40,6 +40,8 @@ public:
     int getObjectHits(std::string name);
     std::vector<Person> getPeople();
 
+    void show2D();
+
     std::map<std::string, Model> objects;
 
 private:

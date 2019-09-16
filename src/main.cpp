@@ -16,6 +16,7 @@ int main()
     room.addCamera(new jalo::Camera(0, "../videos/Воровство в одном из магазинов.mp4"));
 
     room.showCameras();
+    room.show2D();
     cv::waitKey();
 
     while(true)
@@ -24,6 +25,7 @@ int main()
         room.detectPeople();
         room.intersectShouldersDirectionWithObjects();
         room.showCameras();
+        room.show2D();
         if (cv::waitKey(1) != -1)
             break;
     }

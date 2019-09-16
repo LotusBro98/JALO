@@ -211,9 +211,9 @@ void Camera::show(Room* room, bool fill, bool wireframe, bool text) {
                 cv::circle(dispFrame, cam_points_calib[i], 3, colors[i], -1);
             }
 
-            for (auto &person : people) {
-                cv::circle(dispFrame, project(person.position), 2, {0, 0, 255}, -1);
-                cv::circle(dispFrame, project(person.position + person.shoulders_dir * 0.2), 2, {0, 255, 255}, -1);
+            for (auto &person : room->getPeople()) {
+                cv::line(dispFrame, project(person.position), project(person.target), {0, 255, 255}, -1);
+                cv::circle(dispFrame, project(person.position), 2, {0, 0, 255}, 1);
             }
 
         }
