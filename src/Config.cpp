@@ -70,8 +70,13 @@ bool Config::haskey(std::string key) {
     return get().data.find(key) != get().data.end();
 }
 
-float Config::getFloat(std::string key) {
-    return std::stof(get().data[key]);
+float Config::getFloat(std::string key, float def) {
+    if (get().data.find(key) != get().data.end())
+        return std::stof(get().data[key]);
+    else {
+        get().data[key] = std::to_string(def);
+        return def;
+    }
 }
 
 void Config::setFloat(std::string key, float value) {

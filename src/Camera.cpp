@@ -17,17 +17,21 @@ Camera::Camera(int id, const char* source) {
         throw std::runtime_error("Failed to open camera " + std::to_string(id));
 
     cap >> lastFrame;
+    cv::resize(lastFrame, lastFrame, {0,0}, 0.25, 0.25);
 
     std::string key_R = std::string("cam") + std::to_string(id) + "_R";
     std::string key_r0 = std::string("cam") + std::to_string(id) + "_r0";
+    std::string key_r1 = std::string("cam") + std::to_string(id) + "_r1";
     if (!Config::haskey(key_R))
     {
         key_R = "default_R";
         key_r0 = "default_r0";
+        key_r1 = "default_r1";
     }
 
     R = Config::getMat(key_R);
     r0 = Config::getMat(key_r0);
+    shift = Config::getMat(key_r1);
 
     float fov = Config::getFloat("fov");
     fov = fov / 180.0f * M_PIf32;
@@ -39,7 +43,10 @@ Camera::Camera(int id, const char* source) {
 
     dist_coeffs = Config::getMat("dist-coeffs");
 
-    project(object_points, cam_points_calib);
+    std::vector<cv::Point3f> points_shifted;
+    for (auto& pt : object_points)
+        points_shifted.push_back(pt + (cv::Point3f)shift);
+    project(points_shifted, cam_points_calib);
 }
 
 cv::Point2f Camera::project(cv::Point3f point_real) {
@@ -47,6 +54,8 @@ cv::Point2f Camera::project(cv::Point3f point_real) {
     point /= point.z;
     return distortPoint({point.x, point.y}, camera_matrix, dist_coeffs);
 }
+
+
 
 cv::Point3f Camera::unproject(cv::Point2f point_cam, float z) {
     point_cam = undistortPoint(point_cam, camera_matrix, dist_coeffs);
@@ -75,10 +84,21 @@ void Camera::calibrate(std::vector<cv::Point2f> cam_points, cv::Point3f shift) {
     cv::Mat tvecs(cv::Vec3f{0,0,0});
 
     cv::solvePnP(object_points, cam_points, camera_matrix, dist_coeffs, rvecs, tvecs, false, cv::SOLVEPNP_P3P);
-    r0 = (cv::Mat)(tvecs + cv::Mat(shift));
+    r0 = (cv::Mat)(tvecs);
     cv::Rodrigues(rvecs, R);
     R = R.t();
     r0 = (cv::Mat)(-R * (cv::Mat)r0);
+    r0 = r0 + (cv::Vec3f)shift;
+    this->shift = shift;
+
+    std::string key_R = std::string("cam") + std::to_string(id) + "_R";
+    std::string key_r0 = std::string("cam") + std::to_string(id) + "_r0";
+    std::string key_r1 = std::string("cam") + std::to_string(id) + "_r1";
+
+    Config::setMat(key_R, R);
+    Config::setMat(key_r0, (cv::Mat)r0);
+    Config::setMat(key_r1, (cv::Mat)shift);
+//    Config::save();
 }
 
 void Camera::project(const std::vector<cv::Point3f> &points_real, std::vector<cv::Point2f> &points_cam) {
@@ -112,18 +132,52 @@ void Camera::detectPeople(float shoulder_height) {
     }
 }
 
-void Camera::show(Room &room) {
+void camera_mouse_callback(int event, int x, int y, int flags, void *userdata) {
+    ((Camera*)userdata)->mouse_callback(event, {(float)x, (float)y}, flags);
+}
+
+void Camera::show(Room &room, bool fill, bool wireframe) {
+    this->room = &room;
+    this->fill = fill;
+    this->wireframe = wireframe;
     lastFrame.copyTo(dispFrame);
-    for (int i = 0; i < room.model.size(); i++) {
-        std::vector<cv::Point2f> edge;
-        project(room.model[i].points, edge);
-        std::cout << room.model[i].points << "\n";
-        float heat = room.model[i].heat;
-        cv::Scalar color = cv::Scalar(0, 0, 255) * heat + cv::Scalar(255, 0, 0) * (1 - heat);
-        cv::Mat edgemat(edge);
-        edgemat.convertTo(edgemat, CV_32S);
-        std::cout << edge << "\n";
-        cv::polylines(dispFrame, {edgemat }, true, color);
+    if (fill) {
+        cv::Mat canvas(dispFrame.rows, dispFrame.cols, CV_8UC3, cv::Scalar{0,0,0, 0});
+        cv::Mat alpha_mask(dispFrame.rows, dispFrame.cols, CV_8UC3, cv::Scalar{0});
+        cv::Mat alpha_mask0(dispFrame.rows, dispFrame.cols, CV_8UC3, cv::Scalar{0});
+        float alpha = Config::getFloat("draw_alpha", 0.1);
+        for (int i = 0; i < room.model.size(); i++) {
+            std::vector<cv::Point2f> edge;
+            if (!isVisible(room.model[i].points, false))
+                continue;
+            project(room.model[i].points, edge);
+            float heat = room.model[i].heat;
+            cv::Scalar color = cv::Scalar(0, 0, 255, 255) * heat + cv::Scalar(255, 0, 0, 255) * (1 - heat);
+            cv::Mat edgemat(edge);
+            edgemat.convertTo(edgemat, CV_32S);
+            cv::fillConvexPoly(canvas, {edgemat}, color);
+            cv::fillConvexPoly(alpha_mask, {edgemat}, alpha*cv::Scalar{255,255,255});
+            alpha_mask0 += alpha_mask;
+            alpha_mask.setTo(0);
+        }
+
+        cv::multiply(canvas, alpha_mask0, canvas, 1.0/255.0, CV_8UC3);
+        cv::subtract(cv::Mat(dispFrame.rows, dispFrame.cols, CV_8UC3, {255,255,255}), alpha_mask0, alpha_mask0);
+        cv::multiply(dispFrame, alpha_mask0, dispFrame, 1.0/255.0, CV_8UC3);
+
+        dispFrame += canvas;
+    }
+
+    if (wireframe) {
+        for (int i = 0; i < room.model.size(); i++) {
+            std::vector<cv::Point2f> edge;
+            project(room.model[i].points, edge);
+            cv::Mat edgemat(edge);
+            edgemat.convertTo(edgemat, CV_32S);
+            float heat = room.model[i].heat;
+            cv::Scalar color = fill ? cv::Scalar{0,0,0} : cv::Scalar(0, 0, 255, 255) * heat + cv::Scalar(255, 0, 0, 255) * (1 - heat);
+            cv::polylines(dispFrame, {edgemat}, true, color);
+        }
     }
 
     std::vector<cv::Scalar> colors = {{255, 255, 255}, {0, 0, 255}, {0, 255, 0}, {255, 0, 0}};
@@ -139,6 +193,59 @@ void Camera::show(Room &room) {
     }
 
     cv::imshow("Cam" + std::to_string(id), dispFrame);
+    cv::setMouseCallback("Cam" + std::to_string(id), camera_mouse_callback, this);
+}
+
+void Camera::mouse_callback(int event, cv::Point2f point, int flags) {
+    if (event == cv::EVENT_LBUTTONDOWN)
+        isLBDown = true;
+    else if (event == cv::EVENT_LBUTTONUP)
+        isLBDown = false;
+    else if (event == cv::EVENT_RBUTTONDOWN) {
+        dragStart3D = unproject(dragStart);
+        isRBDown = true;
+    }
+    else if (event == cv::EVENT_RBUTTONUP)
+        isRBDown = false;
+
+    if (isLBDown) {
+        float minDist = cv::norm(point - cam_points_calib[0]);
+        float nearest_i = 0;
+        for (int i = 1; i < cam_points_calib.size(); i++) {
+            float dist = cv::norm(point - cam_points_calib[i]);
+            if (dist < minDist) {
+                minDist = dist;
+                nearest_i = i;
+            }
+        }
+
+        cam_points_calib[nearest_i] = point;
+    }
+
+    if (isRBDown) {
+        cv::Point3f drag = dragStart3D - unproject(point);
+        shift = (cv::Point3f)shift + drag;
+    }
+
+    calibrate(cam_points_calib, shift);
+    show(*room, fill, wireframe);
+}
+
+bool Camera::isVisible(cv::Point3f point_real, bool check_bounds) {
+    cv::Point3f point = (cv::Vec3f)(cv::Mat)(R.t()*(cv::Mat)(cv::Vec3f(point_real) - r0));
+    if (point.z <= 0)
+        return false;
+    if (!check_bounds)
+        return true;
+    cv::Point2f point2 = distortPoint({point.x, point.y}, camera_matrix, dist_coeffs);
+    return point2.x > 0 && point2.y > 0 && point2.x < lastFrame.cols && point2.y < lastFrame.rows;
+}
+
+bool Camera::isVisible(std::vector<cv::Point3f> points_real, bool check_bounds) {
+    for (auto& point : points_real)
+        if (isVisible(point, check_bounds))
+            return true;
+    return false;
 }
 
 

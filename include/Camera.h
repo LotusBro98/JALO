@@ -22,12 +22,14 @@ public:
     cv::Point3f unproject(cv::Point2f point_cam, float z = 0);
     bool unproject(cv::Point2f point_cam, cv::Point3f& point_real, std::vector<cv::Point3f>& edge);
 
+    bool isVisible(cv::Point3f point_real, bool check_bounds = true);
+    bool isVisible(std::vector<cv::Point3f> points_real, bool check_bounds = true);
+
     void calibrate(std::vector<cv::Point2f> cam_points, cv::Point3f shift);
 
     void capture();
     void detectPeople(float shoulder_height = 1.6);
-    void show(Room& room);
-
+    void show(Room& room, bool fill = false, bool wireframe = true);
 
 private:
     int id;
@@ -44,6 +46,9 @@ private:
 
     std::vector<Person> people;
 
+    friend void camera_mouse_callback(int event, int x, int y, int flags, void* userdata);
+    void mouse_callback(int event, cv::Point2f point, int flags);
+
     struct openpose_single {
         op::Wrapper opWrapper;
         openpose_single(): opWrapper(op::ThreadManagerMode::Asynchronous) {
@@ -55,6 +60,14 @@ private:
         static openpose_single openpose;
         return openpose.opWrapper;
     }
+
+    bool isLBDown = false;
+    Room *room;
+    bool fill;
+    bool wireframe;
+    bool isRBDown = false;
+    cv::Vec3f shift;
+    cv::Point3f dragStart3D;
 };
 
 }

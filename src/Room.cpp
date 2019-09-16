@@ -13,11 +13,11 @@ void Room::load_model(std::string filename) {
         std::vector<cv::Point3f> edge;
         model.push_back({{
              cv::Point3f{(float) triangle.v1[0], (float) triangle.v1[1],
-                         (float) triangle.v1[2]} / 100,
+                         (float) triangle.v1[2]},
              cv::Point3f{(float) triangle.v2[0], (float) triangle.v2[1],
-                         (float) triangle.v2[2]} / 100,
+                         (float) triangle.v2[2]},
              cv::Point3f{(float) triangle.v3[0], (float) triangle.v3[1],
-                         (float) triangle.v3[2]} / 100,
+                         (float) triangle.v3[2]},
                          }, 0});
     }
 }

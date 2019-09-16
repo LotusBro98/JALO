@@ -10,9 +10,9 @@
 int main()
 {
     jalo::Camera camera(0, "../videos/Воровство в одном из магазинов.mp4");
-    jalo::Room room("../models/1st_Floor.stl");
+    jalo::Room room("../models/room1.stl");
 
-    camera.detectPeople();
-    camera.show(room);
+//    camera.detectPeople();
+    camera.show(room, true, false);
     cv::waitKey();
 }

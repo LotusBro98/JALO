@@ -17,7 +17,7 @@ public:
 
     static cv::Mat getMat(std::string key);
     static std::string getString(std::string key);
-    static float getFloat(std::string key);
+    static float getFloat(std::string key, float def = 0);
 
     static void save();
 
