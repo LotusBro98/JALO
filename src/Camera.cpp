@@ -18,7 +18,6 @@ Camera::Camera(int id, const char* source) {
         throw std::runtime_error("Failed to open camera " + std::to_string(id));
 
     cap >> lastFrame;
-//    cv::resize(lastFrame, lastFrame, {0,0}, 0.25, 0.25);
 
     std::string key_R = std::string("cam") + std::to_string(id) + "_R";
     std::string key_r0 = std::string("cam") + std::to_string(id) + "_r0";
@@ -48,6 +47,8 @@ Camera::Camera(int id, const char* source) {
     for (auto& pt : object_points)
         points_shifted.push_back(pt + (cv::Point3f)shift);
     project(points_shifted, cam_points_calib);
+
+    capture();
 }
 
 cv::Point2f Camera::project(cv::Point3f point_real) {
@@ -109,7 +110,10 @@ void Camera::project(const std::vector<cv::Point3f> &points_real, std::vector<cv
 }
 
 void Camera::capture() {
-    cap >> lastFrame;
+    cv::Mat buf;
+    cap >> buf;
+    //    cv::resize(buf, buf, {0,0}, 0.25, 0.25);
+    cv::undistort(buf, lastFrame, camera_matrix, dist_coeffs);
 }
 
 void Camera::detectPeople(float shoulder_height) {

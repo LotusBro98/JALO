@@ -13,7 +13,9 @@ int main()
 
     room.add_object("walls", "../models/room1.stl");
 
-    room.addCamera(new jalo::Camera(0, "../videos/Воровство в одном из магазинов.mp4"));
+    room.addCamera(new jalo::Camera(0, "../videos/cam16.mp4"));
+    room.addCamera(new jalo::Camera(1, "../videos/cam29.mp4"));
+    room.addCamera(new jalo::Camera(2, "../videos/cam31.mp4"));
 
     room.showCameras();
     room.show2D();
