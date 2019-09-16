@@ -5,6 +5,10 @@
 #ifndef JALO_CAMERA_H
 #define JALO_CAMERA_H
 
+namespace jalo {
+    class Camera;
+}
+
 #include <opencv2/opencv.hpp>
 #include <openpose/headers.hpp>
 #include "Person.h"
@@ -29,7 +33,9 @@ public:
 
     void capture();
     void detectPeople(float shoulder_height = 1.6);
-    void show(Room& room, bool fill = false, bool wireframe = true);
+    void show(Room* room, bool fill = true, bool wireframe = true, bool text = true);
+
+    const std::vector<Person>& getVisiblePeople();
 
 private:
     int id;
@@ -68,6 +74,7 @@ private:
     bool isRBDown = false;
     cv::Vec3f shift;
     cv::Point3f dragStart3D;
+    bool text;
 };
 
 }

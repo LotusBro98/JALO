@@ -75,12 +75,23 @@ float Config::getFloat(std::string key, float def) {
         return std::stof(get().data[key]);
     else {
         get().data[key] = std::to_string(def);
+        save();
         return def;
     }
 }
 
 void Config::setFloat(std::string key, float value) {
     get().data[key] = std::to_string(value);
+}
+
+bool Config::getBool(std::string key, bool def) {
+    if (get().data.find(key) != get().data.end())
+        return std::stoi(get().data[key]);
+    else {
+        get().data[key] = std::to_string((int)def);
+        save();
+        return def;
+    }
 }
 
 }

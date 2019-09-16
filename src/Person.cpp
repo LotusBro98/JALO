@@ -5,5 +5,5 @@
 #include "Person.h"
 
 Person::Person() {
-
+    views = 0;
 }

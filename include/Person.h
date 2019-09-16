@@ -14,7 +14,11 @@ public:
 
     cv::Point3f position;
     cv::Point3f shoulders_dir;
+    int views;
+
+    bool hit;
     cv::Point3f target;
+    std::string target_object;
 
 private:
 

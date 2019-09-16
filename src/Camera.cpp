@@ -4,6 +4,7 @@
 
 #include <Config.h>
 #include <MathUtils.h>
+#include <map>
 #include "../include/Camera.h"
 
 namespace jalo {
@@ -17,7 +18,7 @@ Camera::Camera(int id, const char* source) {
         throw std::runtime_error("Failed to open camera " + std::to_string(id));
 
     cap >> lastFrame;
-    cv::resize(lastFrame, lastFrame, {0,0}, 0.25, 0.25);
+//    cv::resize(lastFrame, lastFrame, {0,0}, 0.25, 0.25);
 
     std::string key_R = std::string("cam") + std::to_string(id) + "_R";
     std::string key_r0 = std::string("cam") + std::to_string(id) + "_r0";
@@ -128,6 +129,7 @@ void Camera::detectPeople(float shoulder_height) {
         Person person;
         person.position = center;
         person.shoulders_dir = dir;
+        person.views = 1;
         people.push_back(person);
     }
 }
@@ -136,60 +138,85 @@ void camera_mouse_callback(int event, int x, int y, int flags, void *userdata) {
     ((Camera*)userdata)->mouse_callback(event, {(float)x, (float)y}, flags);
 }
 
-void Camera::show(Room &room, bool fill, bool wireframe) {
-    this->room = &room;
+void Camera::show(Room* room, bool fill, bool wireframe, bool text) {
+    this->room = room;
     this->fill = fill;
     this->wireframe = wireframe;
+    this->text = text;
     lastFrame.copyTo(dispFrame);
-    if (fill) {
-        cv::Mat canvas(dispFrame.rows, dispFrame.cols, CV_8UC3, cv::Scalar{0,0,0, 0});
-        cv::Mat alpha_mask(dispFrame.rows, dispFrame.cols, CV_8UC3, cv::Scalar{0});
-        cv::Mat alpha_mask0(dispFrame.rows, dispFrame.cols, CV_8UC3, cv::Scalar{0});
-        float alpha = Config::getFloat("draw_alpha", 0.1);
-        for (int i = 0; i < room.model.size(); i++) {
-            std::vector<cv::Point2f> edge;
-            if (!isVisible(room.model[i].points, false))
-                continue;
-            project(room.model[i].points, edge);
-            float heat = room.model[i].heat;
-            cv::Scalar color = cv::Scalar(0, 0, 255, 255) * heat + cv::Scalar(255, 0, 0, 255) * (1 - heat);
-            cv::Mat edgemat(edge);
-            edgemat.convertTo(edgemat, CV_32S);
-            cv::fillConvexPoly(canvas, {edgemat}, color);
-            cv::fillConvexPoly(alpha_mask, {edgemat}, alpha*cv::Scalar{255,255,255});
-            alpha_mask0 += alpha_mask;
-            alpha_mask.setTo(0);
+
+    for (std::map<std::string, Room::Model>::iterator it = room->objects.begin(); it != room->objects.end(); it++) {
+        for (int i = 0; i < it->second.edges.size(); i++) {
+            if (fill) {
+                cv::Mat canvas(dispFrame.rows, dispFrame.cols, CV_8UC3, cv::Scalar{0, 0, 0, 0});
+                cv::Mat alpha_mask(dispFrame.rows, dispFrame.cols, CV_8UC3, cv::Scalar{0});
+                cv::Mat alpha_mask0(dispFrame.rows, dispFrame.cols, CV_8UC3, cv::Scalar{0});
+                float alpha = Config::getFloat("draw_alpha", 0.1);
+                std::vector<cv::Point2f> edge;
+                if (!isVisible(it->second.edges[i].points, false))
+                    continue;
+                project(it->second.edges[i].points, edge);
+                float heat = it->second.hits / 3;
+                if (heat > 1) heat = 1;
+                cv::Scalar color = cv::Scalar(0, 0, 255, 255) * heat + cv::Scalar(255, 0, 0, 255) * (1 - heat);
+                cv::Mat edgemat(edge);
+                edgemat.convertTo(edgemat, CV_32S);
+                cv::fillConvexPoly(canvas, {edgemat}, color);
+                cv::fillConvexPoly(alpha_mask, {edgemat}, alpha * cv::Scalar{255, 255, 255});
+                alpha_mask0 += alpha_mask;
+                alpha_mask.setTo(0);
+                cv::multiply(canvas, alpha_mask0, canvas, 1.0 / 255.0, CV_8UC3);
+                cv::subtract(cv::Mat(dispFrame.rows, dispFrame.cols, CV_8UC3, {255, 255, 255}), alpha_mask0,
+                             alpha_mask0);
+                cv::multiply(dispFrame, alpha_mask0, dispFrame, 1.0 / 255.0, CV_8UC3);
+
+                dispFrame += canvas;
+            }
+
+            if (wireframe) {
+                for (int i = 0; i < it->second.edges.size(); i++) {
+                    std::vector<cv::Point2f> edge;
+                    if (!isVisible(it->second.edges[i].points, false))
+                        continue;
+                    project(it->second.edges[i].points, edge);
+                    cv::Mat edgemat(edge);
+                    edgemat.convertTo(edgemat, CV_32S);
+                    float heat = it->second.hits / 3;
+                    if (heat > 1) heat = 1;
+                    cv::Scalar color = fill ? cv::Scalar{0, 0, 0} : cv::Scalar(0, 0, 255, 255) * heat +
+                                                                    cv::Scalar(255, 0, 0, 255) * (1 - heat);
+                    cv::polylines(dispFrame, {edgemat}, true, color);
+                }
+            }
+
+            if (text) {
+                cv::Point3f center_of_mass(0, 0, 0);
+                int n = 0;
+                for (auto &edge : it->second.edges) {
+                    for (auto &pt : edge.points) {
+                        center_of_mass += pt;
+                        n++;
+                    }
+                }
+                center_of_mass /= n;
+                cv::putText(dispFrame, it->first, project(center_of_mass), cv::FONT_HERSHEY_SIMPLEX, 1,
+                            {255, 255, 255});
+            }
+
+            std::vector<cv::Scalar> colors = {{255, 255, 255},
+                                              {0,   0,   255},
+                                              {0,   255, 0},
+                                              {255, 0,   0}};
+            for (int i = 0; i < cam_points_calib.size(); i++) {
+                cv::circle(dispFrame, cam_points_calib[i], 3, colors[i], -1);
+            }
+
+            for (auto &person : people) {
+                cv::circle(dispFrame, project(person.position), 2, {0, 0, 255}, -1);
+                cv::circle(dispFrame, project(person.position + person.shoulders_dir * 0.2), 2, {0, 255, 255}, -1);
+            }
+
         }
-
-        cv::multiply(canvas, alpha_mask0, canvas, 1.0/255.0, CV_8UC3);
-        cv::subtract(cv::Mat(dispFrame.rows, dispFrame.cols, CV_8UC3, {255,255,255}), alpha_mask0, alpha_mask0);
-        cv::multiply(dispFrame, alpha_mask0, dispFrame, 1.0/255.0, CV_8UC3);
-
-        dispFrame += canvas;
-    }
-
-    if (wireframe) {
-        for (int i = 0; i < room.model.size(); i++) {
-            std::vector<cv::Point2f> edge;
-            project(room.model[i].points, edge);
-            cv::Mat edgemat(edge);
-            edgemat.convertTo(edgemat, CV_32S);
-            float heat = room.model[i].heat;
-            cv::Scalar color = fill ? cv::Scalar{0,0,0} : cv::Scalar(0, 0, 255, 255) * heat + cv::Scalar(255, 0, 0, 255) * (1 - heat);
-            cv::polylines(dispFrame, {edgemat}, true, color);
-        }
-    }
-
-    std::vector<cv::Scalar> colors = {{255, 255, 255}, {0, 0, 255}, {0, 255, 0}, {255, 0, 0}};
-    for (int i = 0; i < cam_points_calib.size(); i++)
-    {
-        cv::circle(dispFrame, cam_points_calib[i], 3, colors[i], -1);
-    }
-
-    for (auto& person : people)
-    {
-        cv::circle(dispFrame, project(person.position), 2, {0,0,255}, -1);
-        cv::circle(dispFrame, project(person.position + person.shoulders_dir * 0.2), 2, {0,255,255}, -1);
     }
 
     cv::imshow("Cam" + std::to_string(id), dispFrame);
@@ -202,7 +229,7 @@ void Camera::mouse_callback(int event, cv::Point2f point, int flags) {
     else if (event == cv::EVENT_LBUTTONUP)
         isLBDown = false;
     else if (event == cv::EVENT_RBUTTONDOWN) {
-        dragStart3D = unproject(dragStart);
+        dragStart3D = unproject(point);
         isRBDown = true;
     }
     else if (event == cv::EVENT_RBUTTONUP)
@@ -228,7 +255,7 @@ void Camera::mouse_callback(int event, cv::Point2f point, int flags) {
     }
 
     calibrate(cam_points_calib, shift);
-    show(*room, fill, wireframe);
+    show(room, fill, wireframe, text);
 }
 
 bool Camera::isVisible(cv::Point3f point_real, bool check_bounds) {
@@ -246,6 +273,10 @@ bool Camera::isVisible(std::vector<cv::Point3f> points_real, bool check_bounds) 
         if (isVisible(point, check_bounds))
             return true;
     return false;
+}
+
+const std::vector<Person> &Camera::getVisiblePeople() {
+    return people;
 }
 
 

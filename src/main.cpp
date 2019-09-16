@@ -9,10 +9,22 @@
 
 int main()
 {
-    jalo::Camera camera(0, "../videos/Воровство в одном из магазинов.mp4");
-    jalo::Room room("../models/room1.stl");
+    jalo::Room room;
 
-//    camera.detectPeople();
-    camera.show(room, true, false);
+    room.add_object("walls", "../models/room1.stl");
+
+    room.addCamera(new jalo::Camera(0, "../videos/Воровство в одном из магазинов.mp4"));
+
+    room.showCameras();
     cv::waitKey();
+
+    while(true)
+    {
+        room.capture();
+        room.detectPeople();
+        room.intersectShouldersDirectionWithObjects();
+        room.showCameras();
+        if (cv::waitKey(1) != -1)
+            break;
+    }
 }
