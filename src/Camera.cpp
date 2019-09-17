@@ -56,6 +56,8 @@ cv::Point2f Camera::project(cv::Point3f point_real) {
     if (point.z <= 0)
         return {0,0};
     point /= point.z;
+    if (!isVisibleReal({point.x, point.y}))
+        return {0, 0};
     return distortPoint({point.x, point.y}, camera_matrix, dist_coeffs);
 }
 
@@ -259,6 +261,14 @@ void Camera::mouse_callback(int event, cv::Point2f point, int flags) {
     }
     else if (event == cv::EVENT_RBUTTONUP)
         isRBDown = false;
+    else if (event == cv::EVENT_MOUSEHWHEEL)
+    {
+        float delta = cv::getMouseWheelDelta(flags);
+        float r = cv::norm(r0) * std::exp(delta / 10.0);
+        if (r < 3) r = 3;
+        if (r > 10) r = 10;
+        r0 *= r / cv::norm(r0);
+    }
 
     if (isLBDown) {
         float minDist = cv::norm(point - cam_points_calib[0]);
@@ -270,14 +280,17 @@ void Camera::mouse_callback(int event, cv::Point2f point, int flags) {
                 nearest_i = i;
             }
         }
-
         cam_points_calib[nearest_i] = point;
-    }
-
-    if (isRBDown) {
+    } else if (isRBDown) {
         cv::Point3f drag = dragStart3D - unproject(point);
         shift = (cv::Point3f)shift + drag;
-    }
+    } else if (event == cv::EVENT_MOUSEHWHEEL) {
+        std::vector<cv::Point3f> points_shifted;
+        for (auto& pt : object_points)
+            points_shifted.push_back(pt + (cv::Point3f)shift);
+        project(points_shifted, cam_points_calib);
+    } else
+        return;
 
     calibrate(cam_points_calib, shift);
     show(room, fill, wireframe, points, text);
@@ -328,20 +341,21 @@ bool Camera::projectLine(cv::Point3f ptr1, cv::Point3f ptr2, cv::Point2f &pt1, c
     cv::Point2f pt1t = {ptr1.x, ptr1.y};
     cv::Point2f pt2t = {ptr2.x, ptr2.y};
 
-    if (!isVisible(pt1t) && !isVisible(pt1t))
+    if (!isVisibleReal(pt1t) && !isVisibleReal(pt1t))
         return false;
 
-    if (!isVisible(pt1t) || !isVisible(pt2t))
+    if (!isVisibleReal(pt1t) || !isVisibleReal(pt2t))
     {
-        if (!isVisible(pt1t))
+        if (!isVisibleReal(pt1t))
         {
             cv::Point2f tmp = pt1t;
             pt1t = pt2t;
             pt2t = tmp;
         } // pt1t is visible, pt2t is invisible;
-        if (pt2t.x < 0) pt2t = pt1t + (pt2t - pt1t) * (-pt1t.x) / (pt2t.x / pt1t.x);
-        if (pt2t.y < 0) pt2t = pt1t + (pt2t - pt1t) * (-pt1t.y) / (pt2t.y / pt1t.y);
-        if (pt2t.x > 0) pt2t = pt1t + (pt2t - pt1t) * (-pt1t.y) / (pt2t.y / pt1t.y);
+        if (pt2t.x < -getFOVR()/2) pt2t = pt1t + (pt2t - pt1t) * (-getFOVR()/2-pt1t.x) / (pt2t.x - pt1t.x);
+        if (pt2t.y < -getVFOVR()/2) pt2t = pt1t + (pt2t - pt1t) * (-getVFOVR()/2-pt1t.y) / (pt2t.y - pt1t.y);
+        if (pt2t.x > getFOVR()/2) pt2t = pt1t + (pt2t - pt1t) * (getFOVR()/2-pt1t.x) / (pt2t.x - pt1t.x);
+        if (pt2t.y > getVFOVR()/2) pt2t = pt1t + (pt2t - pt1t) * (getVFOVR()/2-pt1t.y) / (pt2t.y - pt1t.y);
     }
 
     pt1 = distortPoint(pt1t, camera_matrix, dist_coeffs);
@@ -363,12 +377,24 @@ float Camera::getFOV() {
     return Config::getFloat("fov");
 }
 
-float Camera::getHFOV() {
+float Camera::getVFOV() {
     return lastFrame.rows * getFOV() / lastFrame.cols;
 }
 
 int Camera::getID() {
     return id;
+}
+
+bool Camera::isVisibleReal(cv::Point2f point) {
+    return point.x > -getFOVR()/2 && point.x < getFOVR()/2 && point.y > -getVFOVR()/2 && point.y < getVFOVR()/2;
+}
+
+float Camera::getFOVR() {
+    return Config::getFloat("fov") / 180.0 * M_PIf32;
+}
+
+float Camera::getVFOVR() {
+    return lastFrame.rows * getFOVR() / lastFrame.cols;
 }
 
 

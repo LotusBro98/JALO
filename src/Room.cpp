@@ -166,13 +166,13 @@ void Room::show2D() {
     for (auto cam : cameras)
     {
         float fov = cam->getFOV() / 180.0 * M_PIf32;
-        float hfov = cam->getHFOV() / 180.0 * M_PIf32;
+        float vfov = cam->getVFOV() / 180.0 * M_PIf32;
         std::vector<std::vector<cv::Point3f>> camBox = {
-                {{0,0,0}, {-fov/2, -hfov/2, 1}, {-fov/2, hfov/2, 1}},
-                {{0,0,0}, {-fov/2, hfov/2, 1}, {fov/2, hfov/2, 1}},
-                {{0,0,0}, {fov/2, hfov/2, 1}, {fov/2, -hfov/2, 1}},
-                {{0,0,0}, {fov/2, -hfov/2, 1}, {-fov/2, -hfov/2, 1}},
-                {{0,0,0}, {0, -hfov/2, 1}},
+                {{0,0,0}, {-fov/2, -vfov/2, 1}, {-fov/2, vfov/2, 1}},
+                {{0,0,0}, {-fov/2, vfov/2, 1}, {fov/2, vfov/2, 1}},
+                {{0,0,0}, {fov/2, vfov/2, 1}, {fov/2, -vfov/2, 1}},
+                {{0,0,0}, {fov/2, -vfov/2, 1}, {-fov/2, -vfov/2, 1}},
+                {{0,0,0}, {0, -vfov/2, 1}},
         };
         for (auto& face : camBox)
             cam->rotateToReal(face);

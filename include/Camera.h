@@ -31,11 +31,14 @@ public:
     void rotateToReal(std::vector<cv::Point3f>& points_cam);
 
     float getFOV();
-    float getHFOV();
+    float getFOVR();
+    float getVFOV();
+    float getVFOVR();
     int getID();
 
     bool isVisible(cv::Point3f point_real, bool check_bounds = true);
     bool isVisible(std::vector<cv::Point3f> points_real, bool check_bounds = true);
+    bool isVisible(cv::Point2f point);
 
     void calibrate(std::vector<cv::Point2f> cam_points, cv::Point3f shift);
 
@@ -60,8 +63,7 @@ private:
 
     std::vector<Person> people;
 
-    bool isVisible(cv::Point2f point);
-    void clipLine(cv::Point2f pt1, cv::Point2f pt2);
+    bool isVisibleReal(cv::Point2f point);
 
     friend void camera_mouse_callback(int event, int x, int y, int flags, void* userdata);
     void mouse_callback(int event, cv::Point2f point, int flags);
