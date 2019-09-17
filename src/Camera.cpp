@@ -114,8 +114,8 @@ void Camera::project(const std::vector<cv::Point3f> &points_real, std::vector<cv
 }
 
 void Camera::capture() {
-    cv::Mat buf;
-    cap >> buf;
+//    cv::Mat buf;
+    cap >> lastFrame;
     //    cv::resize(buf, buf, {0,0}, 0.25, 0.25);
 //    cv::undistort(buf, lastFrame, camera_matrix, dist_coeffs);
 }
@@ -239,8 +239,12 @@ void Camera::show(Room* room, bool fill, bool wireframe, bool points, bool text)
             }
 
             for (auto &person : room->getPeople()) {
-                cv::line(dispFrame, project(person.position), project(person.target), {0, 255, 255}, -1);
-                cv::circle(dispFrame, project(person.position), 2, {0, 0, 255}, 1);
+                cv::Point2f pt1;
+                cv::Point2f pt2;
+                if (!projectLine(person.position, person.target, pt1, pt2))
+                    continue;
+                cv::line(dispFrame, pt1, pt2, {0, 255, 255});
+                cv::circle(dispFrame, pt1, 4, {0, 0, 255}, -1);
             }
 
         }

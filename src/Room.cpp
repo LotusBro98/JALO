@@ -83,6 +83,14 @@ int Room::getObjectHits(std::string name) {
 
 void Room::intersectShouldersDirectionWithObjects() {
     float view_distance = Config::getFloat("view_distance", 3);
+
+    for (std::map<std::string, Room::Model>::iterator it = objects.begin(); it != objects.end(); it++)
+    {
+        it->second.hits = 0;
+        for (auto& edge : it->second.edges)
+            edge.hits = 0;
+    }
+
     for (auto& person : people) {
         Edge* lastHitEdge;
         Model* lastHitModel;
@@ -108,6 +116,10 @@ void Room::intersectShouldersDirectionWithObjects() {
             person.hit = true;
             person.target = target;
             person.target_object = lastHitModelName;
+        } else {
+            person.hit = false;
+            person.target = person.position;
+            person.target_object = "";
         }
     }
 }
@@ -132,7 +144,7 @@ void Room::show2D() {
             std::vector<cv::Point2f> edge;
             for (auto &pt : it->second.edges[i].points)
                 edge.push_back((cv::Point2f{pt.y, pt.x} + center) * display_scale);
-            float heat = it->second.hits / 3;
+            float heat = it->second.hits / 3.0;
             if (heat > 1) heat = 1;
             cv::Scalar color = cv::Scalar(0, 0, 255, 255) * heat + cv::Scalar(255, 0, 0, 255) * (1 - heat);
             cv::Mat edgemat(edge);
@@ -158,9 +170,9 @@ void Room::show2D() {
 
     for (auto &person : people) {
         cv::Point2f pos = (cv::Point2f{person.position.y, person.position.x} + center) * display_scale;
-        cv::Point2f tar = person.hit ? (cv::Point2f{person.position.y, person.position.x} + center) * display_scale : pos + cv::Point2f{person.shoulders_dir.y, person.shoulders_dir.x} * display_scale;
-        cv::line(canvas, pos, tar, person.hit ? cv::Scalar{0, 255, 255} : cv::Scalar{0, 255, 0}, -1);
-        cv::circle(canvas, pos, 2, {0, 0, 255}, -1);
+        cv::Point2f tar = person.hit ? (cv::Point2f{person.target.y, person.target.x} + center) * display_scale : pos + cv::Point2f{person.shoulders_dir.y, person.shoulders_dir.x} * display_scale;
+        cv::line(canvas, pos, tar, person.hit ? cv::Scalar{0, 255, 255} : cv::Scalar{0, 255, 0});
+        cv::circle(canvas, pos, 4, {0, 0, 255}, -1);
     }
 
     for (auto cam : cameras)
