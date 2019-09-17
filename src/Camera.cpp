@@ -357,7 +357,6 @@ bool Camera::projectLine(cv::Point3f ptr1, cv::Point3f ptr2, cv::Point2f &pt1, c
         if (pt2t.x > getFOVR()/2) pt2t = pt1t + (pt2t - pt1t) * (getFOVR()/2-pt1t.x) / (pt2t.x - pt1t.x);
         if (pt2t.y > getVFOVR()/2) pt2t = pt1t + (pt2t - pt1t) * (getVFOVR()/2-pt1t.y) / (pt2t.y - pt1t.y);
     }
-
     pt1 = distortPoint(pt1t, camera_matrix, dist_coeffs);
     pt2 = distortPoint(pt2t, camera_matrix, dist_coeffs);
     return true;
