@@ -53,6 +53,8 @@ Camera::Camera(int id, const char* source) {
 
 cv::Point2f Camera::project(cv::Point3f point_real) {
     cv::Point3f point = (cv::Vec3f)(cv::Mat)(R.t()*(cv::Mat)(cv::Vec3f(point_real) - r0));
+    if (point.z <= 0)
+        return {0,0};
     point /= point.z;
     return distortPoint({point.x, point.y}, camera_matrix, dist_coeffs);
 }
@@ -100,7 +102,7 @@ void Camera::calibrate(std::vector<cv::Point2f> cam_points, cv::Point3f shift) {
     Config::setMat(key_R, R);
     Config::setMat(key_r0, (cv::Mat)r0);
     Config::setMat(key_r1, (cv::Mat)shift);
-//    Config::save();
+    Config::save();
 }
 
 void Camera::project(const std::vector<cv::Point3f> &points_real, std::vector<cv::Point2f> &points_cam) {
@@ -113,7 +115,7 @@ void Camera::capture() {
     cv::Mat buf;
     cap >> buf;
     //    cv::resize(buf, buf, {0,0}, 0.25, 0.25);
-    cv::undistort(buf, lastFrame, camera_matrix, dist_coeffs);
+//    cv::undistort(buf, lastFrame, camera_matrix, dist_coeffs);
 }
 
 void Camera::detectPeople(float shoulder_height) {
@@ -142,10 +144,11 @@ void camera_mouse_callback(int event, int x, int y, int flags, void *userdata) {
     ((Camera*)userdata)->mouse_callback(event, {(float)x, (float)y}, flags);
 }
 
-void Camera::show(Room* room, bool fill, bool wireframe, bool text) {
+void Camera::show(Room* room, bool fill, bool wireframe, bool points, bool text) {
     this->room = room;
     this->fill = fill;
     this->wireframe = wireframe;
+    this->points = points;
     this->text = text;
     lastFrame.copyTo(dispFrame);
 
@@ -157,8 +160,8 @@ void Camera::show(Room* room, bool fill, bool wireframe, bool text) {
                 cv::Mat alpha_mask0(dispFrame.rows, dispFrame.cols, CV_8UC3, cv::Scalar{0});
                 float alpha = Config::getFloat("draw_alpha", 0.1);
                 std::vector<cv::Point2f> edge;
-                if (!isVisible(it->second.edges[i].points, false))
-                    continue;
+//                if (!isVisible(it->second.edges[i].points, true))
+//                    continue;
                 project(it->second.edges[i].points, edge);
                 float heat = it->second.hits / 3;
                 if (heat > 1) heat = 1;
@@ -179,17 +182,35 @@ void Camera::show(Room* room, bool fill, bool wireframe, bool text) {
 
             if (wireframe) {
                 for (int i = 0; i < it->second.edges.size(); i++) {
-                    std::vector<cv::Point2f> edge;
-                    if (!isVisible(it->second.edges[i].points, false))
-                        continue;
-                    project(it->second.edges[i].points, edge);
-                    cv::Mat edgemat(edge);
-                    edgemat.convertTo(edgemat, CV_32S);
+//                    std::vector<cv::Point2f> edge;
+//                    if (!isVisible(it->second.edges[i].points, true))
+//                        continue;
+//                    project(it->second.edges[i].points, edge);
                     float heat = it->second.hits / 3;
                     if (heat > 1) heat = 1;
                     cv::Scalar color = fill ? cv::Scalar{0, 0, 0} : cv::Scalar(0, 0, 255, 255) * heat +
                                                                     cv::Scalar(255, 0, 0, 255) * (1 - heat);
-                    cv::polylines(dispFrame, {edgemat}, true, color);
+                    for (int j = 0; j < it->second.edges[i].points.size(); j++)
+                    {
+                        auto ptr1 = it->second.edges[i].points[j % it->second.edges[i].points.size()];
+                        auto ptr2 = it->second.edges[i].points[(j+1) % it->second.edges[i].points.size()];
+                        cv::Point2f pt1;
+                        cv::Point2f pt2;
+                        if (projectLine(ptr1, ptr2, pt1, pt2))
+                            cv::line(dispFrame, pt1, pt2, color, 1);
+                    }
+                }
+            }
+
+            if (points)
+            {
+                for (int i = 0; i < it->second.edges.size(); i++) {
+                    float heat = it->second.hits / 3;
+                    if (heat > 1) heat = 1;
+                    cv::Scalar color = wireframe ? cv::Scalar{0, 0, 0} : cv::Scalar(0, 0, 255, 255) * heat +
+                                                                    cv::Scalar(255, 0, 0, 255) * (1 - heat);
+                    for (auto& pt3 : it->second.edges[i].points)
+                        cv::circle(dispFrame, project(pt3), 2, color, -1);
                 }
             }
 
@@ -259,7 +280,8 @@ void Camera::mouse_callback(int event, cv::Point2f point, int flags) {
     }
 
     calibrate(cam_points_calib, shift);
-    show(room, fill, wireframe, text);
+    show(room, fill, wireframe, points, text);
+    room->show2D();
 }
 
 bool Camera::isVisible(cv::Point3f point_real, bool check_bounds) {
@@ -269,7 +291,7 @@ bool Camera::isVisible(cv::Point3f point_real, bool check_bounds) {
     if (!check_bounds)
         return true;
     cv::Point2f point2 = distortPoint({point.x, point.y}, camera_matrix, dist_coeffs);
-    return point2.x > 0 && point2.y > 0 && point2.x < lastFrame.cols && point2.y < lastFrame.rows;
+    return isVisible(point2);
 }
 
 bool Camera::isVisible(std::vector<cv::Point3f> points_real, bool check_bounds) {
@@ -281,6 +303,72 @@ bool Camera::isVisible(std::vector<cv::Point3f> points_real, bool check_bounds) 
 
 const std::vector<Person> &Camera::getVisiblePeople() {
     return people;
+}
+
+bool Camera::isVisible(cv::Point2f point) {
+    return point.x > 0 && point.y > 0 && point.x < lastFrame.cols && point.y < lastFrame.rows;
+}
+
+bool Camera::projectLine(cv::Point3f ptr1, cv::Point3f ptr2, cv::Point2f &pt1, cv::Point2f &pt2) {
+    ptr1 = (cv::Vec3f)(cv::Mat)(R.t()*(cv::Mat)(cv::Vec3f(ptr1) - r0));
+    ptr2 = (cv::Vec3f)(cv::Mat)(R.t()*(cv::Mat)(cv::Vec3f(ptr2) - r0));
+    if (ptr1.z <= 0)
+    {
+        if (ptr2.z <= 0)
+            return false;
+        else // ptr2.z > 0
+            ptr1 = ptr2 + (ptr1 - ptr2) * (0.001 - ptr2.z) / (ptr1.z - ptr2.z);
+    } else { // ptr1.z > 0
+        if (ptr2.z <= 0)
+            ptr2 = ptr1 + (ptr2 - ptr1) * (0.001 - ptr1.z) / (ptr2.z - ptr1.z);
+    }
+    ptr1 /= ptr1.z;
+    ptr2 /= ptr2.z;
+
+    cv::Point2f pt1t = {ptr1.x, ptr1.y};
+    cv::Point2f pt2t = {ptr2.x, ptr2.y};
+
+    if (!isVisible(pt1t) && !isVisible(pt1t))
+        return false;
+
+    if (!isVisible(pt1t) || !isVisible(pt2t))
+    {
+        if (!isVisible(pt1t))
+        {
+            cv::Point2f tmp = pt1t;
+            pt1t = pt2t;
+            pt2t = tmp;
+        } // pt1t is visible, pt2t is invisible;
+        if (pt2t.x < 0) pt2t = pt1t + (pt2t - pt1t) * (-pt1t.x) / (pt2t.x / pt1t.x);
+        if (pt2t.y < 0) pt2t = pt1t + (pt2t - pt1t) * (-pt1t.y) / (pt2t.y / pt1t.y);
+        if (pt2t.x > 0) pt2t = pt1t + (pt2t - pt1t) * (-pt1t.y) / (pt2t.y / pt1t.y);
+    }
+
+    pt1 = distortPoint(pt1t, camera_matrix, dist_coeffs);
+    pt2 = distortPoint(pt2t, camera_matrix, dist_coeffs);
+    return true;
+}
+
+cv::Point3f Camera::rotateToReal(cv::Point3f point_cam) {
+    cv::Point3f rot = (cv::Vec3f)(cv::Mat)(R * (cv::Mat)point_cam);
+    return rot + (cv::Point3f)r0;
+}
+
+void Camera::rotateToReal(std::vector<cv::Point3f>& points_cam) {
+    for (auto& pt : points_cam)
+        pt = rotateToReal(pt);
+}
+
+float Camera::getFOV() {
+    return Config::getFloat("fov");
+}
+
+float Camera::getHFOV() {
+    return lastFrame.rows * getFOV() / lastFrame.cols;
+}
+
+int Camera::getID() {
+    return id;
 }
 
 

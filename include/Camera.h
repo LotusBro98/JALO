@@ -22,9 +22,17 @@ public:
 
     cv::Point2f project(cv::Point3f point_real);
     void project(const std::vector<cv::Point3f>& points_real, std::vector<cv::Point2f>& points_cam);
+    bool projectLine(cv::Point3f ptr1, cv::Point3f ptr2, cv::Point2f& pt1, cv::Point2f& pt2);
 
     cv::Point3f unproject(cv::Point2f point_cam, float z = 0);
     bool unproject(cv::Point2f point_cam, cv::Point3f& point_real, std::vector<cv::Point3f>& edge);
+
+    cv::Point3f rotateToReal(cv::Point3f point_cam);
+    void rotateToReal(std::vector<cv::Point3f>& points_cam);
+
+    float getFOV();
+    float getHFOV();
+    int getID();
 
     bool isVisible(cv::Point3f point_real, bool check_bounds = true);
     bool isVisible(std::vector<cv::Point3f> points_real, bool check_bounds = true);
@@ -33,7 +41,7 @@ public:
 
     void capture();
     void detectPeople(float shoulder_height = 1.6);
-    void show(Room* room, bool fill = true, bool wireframe = true, bool text = true);
+    void show(Room* room, bool fill = true, bool wireframe = true, bool points = true, bool text = true);
 
     const std::vector<Person>& getVisiblePeople();
 
@@ -51,6 +59,9 @@ private:
     std::vector<cv::Point2f> cam_points_calib;
 
     std::vector<Person> people;
+
+    bool isVisible(cv::Point2f point);
+    void clipLine(cv::Point2f pt1, cv::Point2f pt2);
 
     friend void camera_mouse_callback(int event, int x, int y, int flags, void* userdata);
     void mouse_callback(int event, cv::Point2f point, int flags);
@@ -75,6 +86,7 @@ private:
     cv::Vec3f shift;
     cv::Point3f dragStart3D;
     bool text;
+    bool points;
 };
 
 }
