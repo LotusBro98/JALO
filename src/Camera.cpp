@@ -264,10 +264,10 @@ void Camera::mouse_callback(int event, cv::Point2f point, int flags) {
     else if (event == cv::EVENT_MOUSEHWHEEL)
     {
         float delta = cv::getMouseWheelDelta(flags);
-        float r = cv::norm(r0) * std::exp(delta / 10.0);
+        float r = cv::norm(r0 - shift) * std::exp(delta / 10.0);
         if (r < 3) r = 3;
         if (r > 10) r = 10;
-        r0 *= r / cv::norm(r0);
+        r0 = (r0 - shift) * r / cv::norm(r0 - shift) + shift;
     }
 
     if (isLBDown) {
