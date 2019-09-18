@@ -41,9 +41,40 @@ int main()
     room.add_object("27", "../models/shop1/27.stl");
     room.add_object("28", "../models/shop1/28.stl");
 
-    room.addCamera(new jalo::Camera(0, "../videos/cam16.mp4"));
-    room.addCamera(new jalo::Camera(1, "../videos/cam29.mp4"));
-    room.addCamera(new jalo::Camera(2, "../videos/cam31.mp4"));
+    room.addCamera(new jalo::Camera(5, "../videos/1565609313_23_87/cam5.mp4"));
+    room.addCamera(new jalo::Camera(6, "../videos/1565609313_23_87/cam6.mp4"));
+    room.addCamera(new jalo::Camera(7, "../videos/1565609313_23_87/cam7.mp4"));
+//    room.addCamera(new jalo::Camera(8, "../videos/1565609313_23_87/cam8.mp4"));
+    room.addCamera(new jalo::Camera(9, "../videos/1565609313_23_87/cam9.mp4"));
+//    room.addCamera(new jalo::Camera(10, "../videos/1565609313_23_87/cam10.mp4"));
+    room.addCamera(new jalo::Camera(12, "../videos/1565609313_23_87/cam12.mp4"));
+    room.addCamera(new jalo::Camera(14, "../videos/1565609313_23_87/cam14.mp4"));
+    room.addCamera(new jalo::Camera(15, "../videos/1565609313_23_87/cam15.mp4"));
+//    room.addCamera(new jalo::Camera(16, "../videos/1565609313_23_87/cam16.mp4"));
+//    room.addCamera(new jalo::Camera(17, "../videos/1565609313_23_87/cam17.mp4"));
+    room.addCamera(new jalo::Camera(18, "../videos/1565609313_23_87/cam18.mp4"));
+//    room.addCamera(new jalo::Camera(19, "../videos/1565609313_23_87/cam19.mp4"));
+//    room.addCamera(new jalo::Camera(20, "../videos/1565609313_23_87/cam20.mp4"));
+    room.addCamera(new jalo::Camera(21, "../videos/1565609313_23_87/cam21.mp4"));
+//    room.addCamera(new jalo::Camera(22, "../videos/1565609313_23_87/cam22.mp4"));
+//    room.addCamera(new jalo::Camera(23, "../videos/1565609313_23_87/cam23.mp4"));
+//    room.addCamera(new jalo::Camera(24, "../videos/1565609313_23_87/cam24.mp4"));
+//    room.addCamera(new jalo::Camera(26, "../videos/1565609313_23_87/cam26.mp4"));
+    room.addCamera(new jalo::Camera(27, "../videos/1565609313_23_87/cam27.mp4"));
+//    room.addCamera(new jalo::Camera(28, "../videos/1565609313_23_87/cam28.mp4"));
+//    room.addCamera(new jalo::Camera(29, "../videos/1565609313_23_87/cam29.mp4"));
+//    room.addCamera(new jalo::Camera(30, "../videos/1565609313_23_87/cam30.mp4"));
+//    room.addCamera(new jalo::Camera(31, "../videos/1565609313_23_87/cam31.mp4"));
+    room.addCamera(new jalo::Camera(32, "../videos/1565609313_23_87/cam32.mp4"));
+//    room.addCamera(new jalo::Camera(33, "../videos/1565609313_23_87/cam33.mp4"));
+//    room.addCamera(new jalo::Camera(34, "../videos/1565609313_23_87/cam34.mp4"));
+//    room.addCamera(new jalo::Camera(35, "../videos/1565609313_23_87/cam35.mp4"));
+//    room.addCamera(new jalo::Camera(36, "../videos/1565609313_23_87/cam36.mp4"));
+//    room.addCamera(new jalo::Camera(37, "../videos/1565609313_23_87/cam37.mp4"));
+//    room.addCamera(new jalo::Camera(38, "../videos/1565609313_23_87/cam38.mp4"));
+//    room.addCamera(new jalo::Camera(39, "../videos/1565609313_23_87/cam39.mp4"));
+    room.addCamera(new jalo::Camera(40, "../videos/1565609313_23_87/cam40.mp4"));
+
 
     room.showCameras();
     room.show2D();

@@ -114,9 +114,10 @@ void Camera::project(const std::vector<cv::Point3f> &points_real, std::vector<cv
 }
 
 void Camera::capture() {
-//    cv::Mat buf;
-    cap >> lastFrame;
-    //    cv::resize(buf, buf, {0,0}, 0.25, 0.25);
+    cv::Mat buf;
+    cap >> buf;
+    float scale = Config::getFloat("camera_scale", 1);
+    cv::resize(buf, lastFrame, {0,0}, scale, scale);
 //    cv::undistort(buf, lastFrame, camera_matrix, dist_coeffs);
 }
 
