@@ -9,6 +9,7 @@
 namespace jalo {
 
 Room::Room() {
+    seq = 0;
 }
 
 void Room::add_object(std::string name, std::string filename) {
@@ -38,13 +39,16 @@ void Room::showCameras() {
     bool points = Config::getBool("draw_points", true);
     bool text = Config::getBool("draw_text", true);
     for (auto cam : cameras)
-        cam->show(this, fill, wireframe, text);
+        cam->show(this, fill, wireframe, points, text);
 }
 
-void Room::capture() {
-    for (auto cam : cameras)
-    {
-        cam->capture();
+void Room::capture(int skips) {
+    seq += skips;
+    time = std::chrono::system_clock::now().time_since_epoch().count();
+    for (int i = 0; i < skips; i++) {
+        for (auto cam : cameras) {
+            cam->capture();
+        }
     }
 }
 
@@ -139,12 +143,19 @@ void Room::show2D() {
 
     cv::Mat canvas(height_real * display_scale, width_real * display_scale, CV_8UC3, {0, 0, 0});
 
+    int maxHits = 1;
+    for (std::map<std::string, Room::Model>::iterator it = objects.begin(); it != objects.end(); it++)
+    {
+        if (it->first != "1" && it->first != "17" && it->second.hits > maxHits)
+            maxHits = it->second.hits;
+    }
+
     for (std::map<std::string, Room::Model>::iterator it = objects.begin(); it != objects.end(); it++) {
         for (int i = 0; i < it->second.edges.size(); i++) {
             std::vector<cv::Point2f> edge;
             for (auto &pt : it->second.edges[i].points)
                 edge.push_back((cv::Point2f{pt.y, pt.x} + center) * display_scale);
-            float heat = it->second.hits / 3.0;
+            float heat = it->second.hits / (float)maxHits;
             if (heat > 1) heat = 1;
             cv::Scalar color = cv::Scalar(0, 0, 255, 255) * heat + cv::Scalar(255, 0, 0, 255) * (1 - heat);
             cv::Mat edgemat(edge);
@@ -201,6 +212,51 @@ void Room::show2D() {
     }
 
     cv::imshow("Top View", canvas);
+}
+
+void Room::dumpToDB() {
+    sql::PreparedStatement *pstmt;
+    pstmt = con->prepareStatement("INSERT INTO jalo_vision.target_data (frame, target, pos_x, pos_y, dir_x, dir_y) VALUES (?,?,?,?,?,?)");
+    for (auto & person : people) {
+        pstmt->setInt(1, seq);
+        if (person.hit)
+            pstmt->setString(2, person.target_object);
+        else
+            pstmt->setNull(2, sql::DataType::VARCHAR);
+        pstmt->setDouble(3, person.position.x);
+        pstmt->setDouble(4, person.position.y);
+        pstmt->setDouble(5, person.shoulders_dir.x);
+        pstmt->setDouble(6, person.shoulders_dir.y);
+        pstmt->executeUpdate();
+    }
+
+}
+
+void Room::connectToDB(std::string hostname, std::string user, std::string password) {
+    driver = get_driver_instance();
+    con = driver->connect(hostname, user, password);
+    con->setSchema(Config::getString("db_table", "jalo_vision"));
+}
+
+void Room::loadHeatFromDB() {
+    for (std::map<std::string, Room::Model>::iterator it = objects.begin(); it != objects.end(); it++)
+    {
+        it->second.hits = 0;
+        for (auto& edge : it->second.edges)
+            edge.hits = 0;
+    }
+
+    sql::Statement *stmt;
+    sql::ResultSet  *res;
+    stmt = con->createStatement();
+
+    res = stmt->executeQuery("SELECT * FROM jalo_vision.target_data");
+    while (res->next()) {
+        if (res->isNull("target"))
+            continue;
+        std::string target = res->getString("target");
+        objects[target].hits++;
+    }
 }
 
 }

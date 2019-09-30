@@ -94,4 +94,28 @@ bool Config::getBool(std::string key, bool def) {
     }
 }
 
+void Config::setBool(std::string key, bool value) {
+    get().data[key] = std::to_string(value);
+}
+
+std::string Config::getString(std::string key, std::string def) {
+    if (get().data.find(key) != get().data.end())
+        return get().data[key];
+    else {
+        get().data[key] = def;
+        save();
+        return def;
+    }
+}
+
+bool Config::getInt(std::string key, int def) {
+    if (get().data.find(key) != get().data.end())
+        return std::stoi(get().data[key]);
+    else {
+        get().data[key] = std::to_string(def);
+        save();
+        return def;
+    }
+}
+
 }

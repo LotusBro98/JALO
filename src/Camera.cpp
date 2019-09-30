@@ -17,7 +17,7 @@ Camera::Camera(int id, const char* source) {
     if (!cap.isOpened())
         throw std::runtime_error("Failed to open camera " + std::to_string(id));
 
-    cap >> lastFrame;
+    capture();
 
     std::string key_R = std::string("cam") + std::to_string(id) + "_R";
     std::string key_r0 = std::string("cam") + std::to_string(id) + "_r0";
@@ -122,6 +122,14 @@ void Camera::capture() {
 }
 
 void Camera::detectPeople(float shoulder_height) {
+
+//    auto boxes = detectPeopleBoxes(lastFrame);
+//    for (auto box : boxes)
+//    {
+//        cv::rectangle(lastFrame, box, {0,255,0});
+//    }
+//    cv::imshow("Boxes", lastFrame);
+
     people.clear();
     auto datum = getOP().emplaceAndPop(lastFrame);
     auto& keypoints = datum->front()->poseKeypoints;
@@ -133,7 +141,8 @@ void Camera::detectPeople(float shoulder_height) {
         cv::Point3f rs3D = unproject(rightShoulder, shoulder_height);
         cv::Point3f center = 0.5 * (ls3D + rs3D);
         cv::Point3f dir = {-(rs3D.y - ls3D.y), rs3D.x - ls3D.x, 0};
-        dir /= cv::norm(dir);
+        if (dir != cv::Point3f{0,0,0})
+            dir /= cv::norm(dir);
 
         Person person;
         person.position = center;
@@ -399,6 +408,42 @@ float Camera::getFOVR() {
 
 float Camera::getVFOVR() {
     return lastFrame.rows * getFOVR() / lastFrame.cols;
+}
+
+std::vector<cv::Rect2f> Camera::detectPeopleBoxes(cv::Mat &frame, float thresh, float nms) {
+    network *net = getYOLOnet();
+    layer l = net->layers[net->n - 1];
+    set_batch_network(net, 1);
+
+    cv::Mat net_input;
+    cv::resize(frame, net_input, {net->w, net->h});
+    net_input.convertTo(net_input, CV_32F, 1/255.0f);
+
+    float *X = net_input.ptr<float>();
+    network_predict(net, X);
+
+    int nboxes = 0;
+    detection *dets = get_network_boxes(net, 1, 1, thresh, 0, 0, 0, &nboxes);
+    do_nms_sort(dets, l.side * l.side * l.n, l.classes, nms);
+
+    std::vector<cv::Rect2f> boxes;
+    for (int i = 0; i < nboxes; i++)
+    {
+        if (dets[i].sort_class == 14) //person
+        {
+            cv::Rect2f box{
+                dets[i].bbox.x,
+                dets[i].bbox.y,
+                dets[i].bbox.w,
+                dets[i].bbox.h
+                };
+            boxes.push_back(box);
+        }
+    }
+
+    free_detections(dets, nboxes);
+
+    return boxes;
 }
 
 

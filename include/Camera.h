@@ -9,6 +9,7 @@ namespace jalo {
     class Camera;
 }
 
+#include <darknet.h>
 #include <opencv2/opencv.hpp>
 #include <openpose/headers.hpp>
 #include "Person.h"
@@ -63,6 +64,8 @@ private:
 
     std::vector<Person> people;
 
+    std::vector<cv::Rect2f> detectPeopleBoxes(cv::Mat& frame, float thresh=0.4, float nms=0.4);
+
     bool isVisibleReal(cv::Point2f point);
 
     friend void camera_mouse_callback(int event, int x, int y, int flags, void* userdata);
@@ -78,6 +81,22 @@ private:
     static op::Wrapper& getOP() {
         static openpose_single openpose;
         return openpose.opWrapper;
+    }
+
+    struct yolo_net {
+        network *net;
+        yolo_net() {
+            char * cfgfile = strdup(Config::getString("yolo_cfg", "../3party/darknet/cfg/yolov3-tiny.cfg").data());
+            char * weightfile = strdup(Config::getString("yolo_weights", "../3party/darknet/yolov3-tiny.weights").data());
+//            gpu_index = -1;
+            net = load_network(cfgfile, weightfile, 0);
+            free(cfgfile);
+            free(weightfile);
+        }
+    };
+    static network* getYOLOnet() {
+        static yolo_net yolo;
+        return yolo.net;
     }
 
     bool isLBDown = false;

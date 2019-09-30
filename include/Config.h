@@ -16,9 +16,10 @@ class Config {
 public:
 
     static cv::Mat getMat(std::string key);
-    static std::string getString(std::string key);
+    static std::string getString(std::string key, std::string def = "");
     static float getFloat(std::string key, float def = 0);
     static bool getBool(std::string key, bool def = false);
+    static bool getInt(std::string key, int def = 0);
 
     static void save();
 
@@ -27,6 +28,7 @@ public:
     static void setMat(std::string key, const cv::Mat& mat);
     static void setString(std::string key, const std::string& value);
     static void setFloat(std::string key, float value);
+    static void setBool(std::string key, bool value);
 
 private:
     static Config &get();

@@ -13,6 +13,14 @@ namespace jalo {
 #include "Camera.h"
 #include <opencv2/opencv.hpp>
 
+#include "mysql_connection.h"
+
+#include <cppconn/driver.h>
+#include <cppconn/exception.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
+#include <cppconn/prepared_statement.h>
+
 namespace jalo {
 
 class Room {
@@ -32,10 +40,13 @@ public:
     void add_object(std::string name, std::string filename);
     void addCamera(Camera* camera);
     void showCameras();
+    void connectToDB(std::string hostname, std::string user, std::string password);
 
-    void capture();
+    void capture(int skips = 1);
     void detectPeople();
     void intersectShouldersDirectionWithObjects();
+    void dumpToDB();
+    void loadHeatFromDB();
 
     int getObjectHits(std::string name);
     std::vector<Person> getPeople();
@@ -47,6 +58,12 @@ public:
 private:
     std::vector<Camera*> cameras;
     std::vector<Person> people;
+
+    sql::Driver *driver;
+    sql::Connection *con;
+
+    float seq;
+    unsigned long long int time;
 };
 
 }
