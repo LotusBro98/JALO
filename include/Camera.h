@@ -83,21 +83,21 @@ private:
         return openpose.opWrapper;
     }
 
-    struct yolo_net {
-        network *net;
-        yolo_net() {
-            char * cfgfile = strdup(Config::getString("yolo_cfg", "../3party/darknet/cfg/yolov3-tiny.cfg").data());
-            char * weightfile = strdup(Config::getString("yolo_weights", "../3party/darknet/yolov3-tiny.weights").data());
-//            gpu_index = -1;
-            net = load_network(cfgfile, weightfile, 0);
-            free(cfgfile);
-            free(weightfile);
-        }
-    };
-    static network* getYOLOnet() {
-        static yolo_net yolo;
-        return yolo.net;
-    }
+//    struct yolo_net {
+//        network *net;
+//        yolo_net() {
+//            char * cfgfile = strdup(Config::getString("yolo_cfg", "../3party/darknet/cfg/yolov3-tiny.cfg").data());
+//            char * weightfile = strdup(Config::getString("yolo_weights", "../3party/darknet/yolov3-tiny.weights").data());
+////            gpu_index = -1;
+//            net = load_network(cfgfile, weightfile, 0);
+//            free(cfgfile);
+//            free(weightfile);
+//        }
+//    };
+//    static network* getYOLOnet() {
+//        static yolo_net yolo;
+//        return yolo.net;
+//    }
 
     bool isLBDown = false;
     Room *room;
