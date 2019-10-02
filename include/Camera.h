@@ -9,7 +9,7 @@ namespace jalo {
     class Camera;
 }
 
-#include <darknet.h>
+//#include <darknet.h>
 #include <opencv2/opencv.hpp>
 #include <openpose/headers.hpp>
 #include "Person.h"

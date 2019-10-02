@@ -410,41 +410,41 @@ float Camera::getVFOVR() {
     return lastFrame.rows * getFOVR() / lastFrame.cols;
 }
 
-std::vector<cv::Rect2f> Camera::detectPeopleBoxes(cv::Mat &frame, float thresh, float nms) {
-    network *net = getYOLOnet();
-    layer l = net->layers[net->n - 1];
-    set_batch_network(net, 1);
-
-    cv::Mat net_input;
-    cv::resize(frame, net_input, {net->w, net->h});
-    net_input.convertTo(net_input, CV_32F, 1/255.0f);
-
-    float *X = net_input.ptr<float>();
-    network_predict(net, X);
-
-    int nboxes = 0;
-    detection *dets = get_network_boxes(net, 1, 1, thresh, 0, 0, 0, &nboxes);
-    do_nms_sort(dets, l.side * l.side * l.n, l.classes, nms);
-
-    std::vector<cv::Rect2f> boxes;
-    for (int i = 0; i < nboxes; i++)
-    {
-        if (dets[i].sort_class == 14) //person
-        {
-            cv::Rect2f box{
-                dets[i].bbox.x,
-                dets[i].bbox.y,
-                dets[i].bbox.w,
-                dets[i].bbox.h
-                };
-            boxes.push_back(box);
-        }
-    }
-
-    free_detections(dets, nboxes);
-
-    return boxes;
-}
+//std::vector<cv::Rect2f> Camera::detectPeopleBoxes(cv::Mat &frame, float thresh, float nms) {
+//    network *net = getYOLOnet();
+//    layer l = net->layers[net->n - 1];
+//    set_batch_network(net, 1);
+//
+//    cv::Mat net_input;
+//    cv::resize(frame, net_input, {net->w, net->h});
+//    net_input.convertTo(net_input, CV_32F, 1/255.0f);
+//
+//    float *X = net_input.ptr<float>();
+//    network_predict(net, X);
+//
+//    int nboxes = 0;
+//    detection *dets = get_network_boxes(net, 1, 1, thresh, 0, 0, 0, &nboxes);
+//    do_nms_sort(dets, l.side * l.side * l.n, l.classes, nms);
+//
+//    std::vector<cv::Rect2f> boxes;
+//    for (int i = 0; i < nboxes; i++)
+//    {
+//        if (dets[i].sort_class == 14) //person
+//        {
+//            cv::Rect2f box{
+//                dets[i].bbox.x,
+//                dets[i].bbox.y,
+//                dets[i].bbox.w,
+//                dets[i].bbox.h
+//                };
+//            boxes.push_back(box);
+//        }
+//    }
+//
+//    free_detections(dets, nboxes);
+//
+//    return boxes;
+//}
 
 
 }
