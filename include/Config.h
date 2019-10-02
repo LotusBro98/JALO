@@ -19,7 +19,7 @@ public:
     static std::string getString(std::string key, std::string def = "");
     static float getFloat(std::string key, float def = 0);
     static bool getBool(std::string key, bool def = false);
-    static bool getInt(std::string key, int def = 0);
+    static int getInt(std::string key, int def = 0);
 
     static void save();
 

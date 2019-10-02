@@ -108,9 +108,10 @@ std::string Config::getString(std::string key, std::string def) {
     }
 }
 
-bool Config::getInt(std::string key, int def) {
-    if (get().data.find(key) != get().data.end())
-        return std::stoi(get().data[key]);
+int Config::getInt(std::string key, int def) {
+    if (get().data.find(key) != get().data.end()) {
+        return (int)std::stoi(get().data[key]);
+    }
     else {
         get().data[key] = std::to_string(def);
         save();

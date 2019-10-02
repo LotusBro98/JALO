@@ -76,9 +76,9 @@ int main(int argc, char* argv[])
             );
 
     int seq = 0;
+    int skips = jalo::Config::getInt("camera_skips", 20);
     while(true)
     {
-        int skips = jalo::Config::getInt("camera_skips", 20);
         room.capture(skips);
         std::cout << "\rframe " << seq << "           ";
         fflush(stdout);
