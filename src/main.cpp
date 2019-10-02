@@ -83,22 +83,26 @@ int main(int argc, char* argv[])
     int skips = jalo::Config::getInt("camera_skips", 20);
     while(true)
     {
-        room.capture(skips);
-        std::cout << "\rframe " << seq << "           ";
-        fflush(stdout);
-        seq += skips;
-        room.detectPeople();
-        room.intersectShouldersDirectionWithObjects();
-        room.dumpToDB();
-        if (jalo::Config::getBool("interactive")) {
-            room.showCameras();
-            room.show2D();
-            if (cv::waitKey(1) != -1)
-                break;
-        } else if (jalo::Config::getBool("interactive2D")) {
-            room.show2D();
-            if (cv::waitKey(1) != -1)
-                break;
+        try {
+            room.capture(skips);
+            std::cout << "\rframe " << seq << "           ";
+            fflush(stdout);
+            seq += skips;
+            room.detectPeople();
+            room.intersectShouldersDirectionWithObjects();
+            room.dumpToDB();
+            if (jalo::Config::getBool("interactive")) {
+                room.showCameras();
+                room.show2D();
+                if (cv::waitKey(1) != -1)
+                    break;
+            } else if (jalo::Config::getBool("interactive2D")) {
+                room.show2D();
+                if (cv::waitKey(1) != -1)
+                    break;
+            }
+        } catch (std::exception& e) {
+            std::cerr << "wtf: " << e.what() << "\n";
         }
     }
 }
