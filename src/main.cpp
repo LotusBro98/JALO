@@ -49,7 +49,11 @@ int main(int argc, char* argv[])
 
     for (int cam : cameras) {
         std::string path = video_path + "/cam" + std::to_string(cam) + ".mp4";
-        room.addCamera(new jalo::Camera(cam, path.data()));
+        try {
+            room.addCamera(new jalo::Camera(cam, path.data()));
+        } catch (std::exception& e) {
+            std::cerr << path << ": " << e.what() << "\n";
+        }
     }
 
     if (argc > 1) {
