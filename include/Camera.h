@@ -74,7 +74,7 @@ private:
     struct openpose_single {
         op::Wrapper opWrapper;
         openpose_single(): opWrapper(op::ThreadManagerMode::Asynchronous) {
-            opWrapper.disableMultiThreading();
+//            opWrapper.disableMultiThreading();
             op::WrapperStructPose params;
             params.netInputSize = {368, 368};
             opWrapper.configure(params);
