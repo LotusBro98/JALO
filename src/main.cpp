@@ -81,6 +81,7 @@ int main(int argc, char* argv[])
         int skips = jalo::Config::getInt("camera_skips", 20);
         room.capture(skips);
         std::cout << "\rframe " << seq << "           ";
+        fflush(stdout);
         seq += skips;
         room.detectPeople();
         room.intersectShouldersDirectionWithObjects();
