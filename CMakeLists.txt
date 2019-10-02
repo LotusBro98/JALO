@@ -5,7 +5,7 @@ project(JALO)
 find_package(OpenCV REQUIRED)
 find_package(OpenPose REQUIRED)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 
 include_directories(${OpenCV_INCLUDE_DIRS} include 3party/stl-parser 3party/darknet/include)
 link_directories(3party/darknet)
