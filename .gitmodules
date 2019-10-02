@@ -1,0 +1,3 @@
+[submodule "stl-parser"]
+	path = 3party/stl-parser
+	url = https://github.com/ja3067/stl-parser
