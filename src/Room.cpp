@@ -215,9 +215,9 @@ void Room::show2D() {
 }
 
 void Room::dumpToDB() {
-    sql::PreparedStatement *pstmt;
-    pstmt = con->prepareStatement("INSERT INTO jalo_vision.target_data (frame, target, pos_x, pos_y, dir_x, dir_y) VALUES (?,?,?,?,?,?)");
     for (auto & person : people) {
+        sql::PreparedStatement *pstmt;
+        pstmt = con->prepareStatement("INSERT INTO jalo_vision.target_data (frame, target, pos_x, pos_y, dir_x, dir_y) VALUES (?,?,?,?,?,?)");
         pstmt->setInt(1, seq);
         if (person.hit)
             pstmt->setString(2, person.target_object);
@@ -227,7 +227,8 @@ void Room::dumpToDB() {
         pstmt->setDouble(4, person.position.y);
         pstmt->setDouble(5, person.shoulders_dir.x);
         pstmt->setDouble(6, person.shoulders_dir.y);
-        pstmt->executeUpdate();
+        pstmt->execute();
+        pstmt->close();
     }
 
 }
