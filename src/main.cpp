@@ -75,9 +75,13 @@ int main(int argc, char* argv[])
             jalo::Config::getString("db_password", "kbkbrnjy")
             );
 
+    int seq = 0;
     while(true)
     {
-        room.capture(jalo::Config::getInt("camera_skips", 20));
+        int skips = jalo::Config::getInt("camera_skips", 20);
+        room.capture(skips);
+        std::cout << "\rframe " << seq << "           ";
+        seq += skips;
         room.detectPeople();
         room.intersectShouldersDirectionWithObjects();
         room.dumpToDB();
