@@ -45,6 +45,8 @@ void Room::showCameras() {
 void Room::capture(int skips) {
     seq += skips;
     time = std::chrono::system_clock::now().time_since_epoch().count();
+    if (cameras.size() == 0)
+	throw std::runtime_error("No cameras opened.");
     for (int i = 0; i < skips; i++) {
         for (auto cam : cameras) {
             cam->capture();
