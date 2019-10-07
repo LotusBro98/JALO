@@ -1,0 +1,37 @@
+@font-face {
+    font-family: "Caviar Dreams Bold";
+    src: url("../../static/fonts/Caviar_Dreams_Bold.ttf");
+}
+
+@font-face {
+    font-family: "Caviar Dreams";
+    src: url("../../static/fonts/CaviarDreams.ttf");
+}
+
+body {
+    background-color: black; /* Цвет фона веб-страницы */
+}
+
+h1 {
+    font-family: 'Ubuntu', 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', sans-serif;
+    color: gold;
+}
+
+p {
+    color: white;
+}
+
+.shelf {
+    background-color: aqua;
+}
+
+#box {
+    stroke: transparent;
+}
+
+.label {
+    fill: black;
+    font-size: 6px;
+    font-family: "Caviar Dreams Bold";
+    text-align: center;
+}
