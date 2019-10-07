@@ -99,11 +99,11 @@ def index(request):
             # drawing += '<rect id="box" x="{}" y="{}" width="{}" height="{}"/>'.format(x, y, w, h)
             drawing += '<polygon style="fill: {}" id="box" points="{},{} {},{} {},{}"/>\n'.format(color, x0, y0, x1, y1, x2, y2)
 
-    for name, data in targets.items():
-        xc, yc = data["center"]
-        xc -= 1.1 * (len(name) + 1)
-        yc += 2
-        drawing += '<text x="{}" y="{}" class="label">{}</text>\n'.format(xc, yc, name)
+    # for name, data in targets.items():
+    #     xc, yc = data["center"]
+    #     xc -= 1.1 * (len(name) + 1)
+    #     yc += 2
+    #     drawing += '<text x="{}" y="{}" class="label">{}</text>\n'.format(xc, yc, name)
 
     drawing += "</svg>"
 

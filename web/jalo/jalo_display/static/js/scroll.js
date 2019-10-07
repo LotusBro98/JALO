@@ -4,7 +4,7 @@ function sleep(ms) {
 
 async function runScroll(){
 
-    var timeout = 6000;
+    var timeout = 12000;
 
     while (true) {
         window.scroll(0, document.getElementById("slide2").offsetTop);

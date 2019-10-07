@@ -35,3 +35,7 @@ p {
     font-family: "Caviar Dreams Bold";
     text-align: center;
 }
+
+html {
+  scroll-behavior: smooth;
+}

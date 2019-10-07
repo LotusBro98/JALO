@@ -1,28 +1,50 @@
-<html>
+<html xmlns:z-index="http://www.w3.org/1999/xhtml">
 <head>
     <script type="text/javascript" src="static/js/scroll.js"></script>
     <link rel="stylesheet" href="static/css/main.css">
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+
+    <script>
+        async function runScroll() {
+
+            var timeout = 15000;
+
+            while (true) {
+                window.scroll(0, document.getElementById("slide2").offsetTop);
+                await sleep(timeout);
+                window.scroll(0, document.getElementById("slide1").offsetTop);
+                await sleep(timeout);
+            }
+        }
+    </script>
+
 </head>
 
 
 <body onload="runScroll()">
+<!--<body>-->
 
 <div id="slide1">
-<img style="width: 100%" src="static/images/Slai_774_d3.png" onclick="runScroll()">
+    <img style="width: 100%" src="static/images/Slai_774_d02.jpg" onclick="runScroll()">
 </div>
 
-<div style="height: 10%"/>
+<div style="height: 100px"></div>
 
 <div style="position: relative" id="slide2">
 
-    <img style="width: 100%" src="static/images/Slai_774_d3.png">
+    <div style="width: 69%; position: absolute; top: 21.3%; left: 0.5%; z-index: auto;">
+        $$MAP$$
+    </div>
 
-    <div style="width: 69%; position: absolute; top: 20.7%; left: 1.5%" >
-    $$MAP$$
+    <div style="width: 100%; position: relative; top: 20%; z-index:auto">
+        <img style="width: 100%;" src="static/images/Bez_zagolovka (1).png">
     </div>
 
 </div>
-
 
 
 </body>
