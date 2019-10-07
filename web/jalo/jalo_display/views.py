@@ -12,16 +12,16 @@ import cv2 as cv
 # Create your views here.
 
 history_size = 5000
-MODELS_DIR = os.path.join(os.path.dirname(__file__), "../../../models/shop1")
-viewport_disp = [0, 0, 200, 150]
-viewport = [-6.5, -5.5, 20, 15]
+MODELS_DIR = os.path.join(os.path.dirname(__file__), "../../../models/shop1_2")
+viewport_disp = [0.0, 0.0, 200.0, 150.0]
+viewport = [-6.5, -5.5, 20.0, 15.0]
 
 targets = {}
 
 def pos_on_frame(x0, y0):
     x = (-y0 - viewport[0]) / viewport[2] * viewport_disp[2] + viewport_disp[0]
     y = (-x0 - viewport[1]) / viewport[3] * viewport_disp[3] + viewport_disp[1]
-    return [int(x), int(y)]
+    return [(x), (y)]
 
 def reload_models():
     global rects
@@ -66,7 +66,7 @@ def reload_db():
 
     maxHits = 0
     for name in targets:
-        if name not in ["1", "17"] and targets[name]["hits"] > maxHits:
+        if targets[name]["hits"] > maxHits:
             maxHits = targets[name]["hits"]
 
     for name in targets:
