@@ -85,9 +85,11 @@ void Config::setFloat(std::string key, float value) {
 }
 
 bool Config::getBool(std::string key, bool def) {
-    if (get().data.find(key) != get().data.end())
-        return std::stoi(get().data[key]);
-    else {
+    if (get().data.find(key) != get().data.end()) {
+        auto val = get().data[key];
+        auto value = std::stoi(val);
+        return value;
+    } else {
         get().data[key] = std::to_string((int)def);
         save();
         return def;
