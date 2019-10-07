@@ -28,7 +28,7 @@ def reload_models():
     for file in os.listdir(MODELS_DIR):
         path = os.path.join(MODELS_DIR, file)
         mesh = stl.mesh.Mesh.from_file(path)
-        name = file.split(".")[0]
+        name = file.split(".")[-2]
         points = []
         center = np.zeros((2,), dtype=np.float32)
         for v0, v1, v2 in zip(mesh.v0, mesh.v1, mesh.v2):
