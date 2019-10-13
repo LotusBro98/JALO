@@ -16,6 +16,12 @@
             while (true) {
                 window.scroll(0, document.getElementById("slide2").offsetTop);
                 await sleep(timeout);
+                window.scroll(0, document.getElementById("slide3").offsetTop);
+                await sleep(timeout);
+                window.scroll(0, document.getElementById("slide4").offsetTop);
+                await sleep(timeout);
+                window.scroll(0, document.getElementById("slide5").offsetTop);
+                await sleep(timeout);
                 window.scroll(0, document.getElementById("slide1").offsetTop);
                 await sleep(timeout);
             }
@@ -29,7 +35,7 @@
 <!--<body>-->
 
 <div id="slide1">
-    <img style="width: 100%" src="static/images/Slai_774_d02.jpg" onclick="runScroll()">
+    <img style="width: 100%" src="static/images/Slai_774_d08.png" onclick="runScroll()">
 </div>
 
 <div style="height: 100px"></div>
@@ -41,9 +47,37 @@
     </div>
 
     <div style="width: 100%; position: relative; top: 20%; z-index:auto">
-        <img style="width: 100%;" src="static/images/Bez_zagolovka (1).png">
+        <img style="width: 100%;" src="static/images/Obschie_pokazateli.png">
     </div>
 
+</div>
+
+<div style="position: relative" id="slide3">
+
+    <div style="width: 69%; position: absolute; top: 21.3%; left: 0.5%; z-index: auto;">
+        $$MAP$$
+    </div>
+
+    <div style="width: 100%; position: relative; top: 20%; z-index:auto">
+        <img style="width: 100%;" src="static/images/Tsifry1.png">
+    </div>
+
+</div>
+
+<div style="position: relative" id="slide4">
+
+    <div style="width: 69%; position: absolute; top: 21.3%; left: 0.5%; z-index: auto;">
+        $$MAP$$
+    </div>
+
+    <div style="width: 100%; position: relative; top: 20%; z-index:auto">
+        <img style="width: 100%;" src="static/images/Tsifry.png">
+    </div>
+
+</div>
+
+<div id="slide5">
+    <img style="width: 100%" src="static/images/Slai_774_d02.jpg" onclick="runScroll()">
 </div>
 
 

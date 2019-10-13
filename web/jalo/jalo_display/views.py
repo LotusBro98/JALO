@@ -48,7 +48,7 @@ def reload_models():
 def reload_db():
     entries = TargetData.objects.all()
 
-    # entries = list(entries)[-history_size:]
+    entries = list(entries)[-history_size:]
 
     for name in targets:
         targets[name]["hits"] = 0

@@ -9,6 +9,10 @@ async function runScroll(){
     while (true) {
         window.scroll(0, document.getElementById("slide2").offsetTop);
         await sleep(timeout);
+        window.scroll(0, document.getElementById("slide3").offsetTop);
+        await sleep(timeout);
+        window.scroll(0, document.getElementById("slide4").offsetTop);
+        await sleep(timeout);
         window.scroll(0, document.getElementById("slide1").offsetTop);
         await sleep(timeout);
     }
