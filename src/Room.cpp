@@ -252,7 +252,7 @@ std::string timestring() {
 void Room::dumpToDB(time_t timestamp) {
 
     char buffer[80];
-    struct tm * timeinfo = localtime(&timestamp);
+    struct tm * timeinfo = gmtime(&timestamp);
     strftime(buffer,sizeof(buffer),"%Y-%m-%d %H:%M:%S",timeinfo);
     std::string time_str(buffer);
 
