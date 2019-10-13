@@ -48,7 +48,7 @@ def reload_models():
 def reload_db():
     entries = TargetData.objects.all()
 
-    # entries = list(entries)[-history_size:]
+    #entries = list(entries)[-history_size:]
 
     for name in targets:
         targets[name]["hits"] = 0
@@ -66,8 +66,11 @@ def reload_db():
 
     maxHits = 0
     for name in targets:
-        if targets[name]["hits"] > maxHits:
-            maxHits = targets[name]["hits"]
+        #if targets[name]["hits"] > maxHits:
+        #    maxHits = targets[name]["hits"]
+        hits = targets[name]["hits"]
+        maxHits += hits * hits
+    maxHits = np.sqrt(maxHits / len(targets))
 
     for name in targets:
         heat = targets[name]["hits"] / maxHits

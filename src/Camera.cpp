@@ -13,7 +13,7 @@ auto object_points = std::vector<cv::Point3f>{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {
 
 Camera::Camera(int id, const char* source) {
     this->id = id;
-    cap = cv::VideoCapture(source, cv::CAP_FFMPEG);
+    cap = cv::VideoCapture(source, cv::CAP_ANY);
     if (!cap.isOpened())
         throw std::runtime_error("Failed to open camera " + std::to_string(id));
 

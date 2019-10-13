@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
             std::cerr << "\nUnable to capture more. Finishing.\n";
             return 0;
         }
-        std::cout << "\rframe " << seq << "           ";
+        std::cout << "frame " << seq << "           \n";
         fflush(stdout);
         seq += skips;
         room.detectPeople();

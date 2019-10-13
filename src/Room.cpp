@@ -5,6 +5,8 @@
 #include <Config.h>
 #include <MathUtils.h>
 #include "Room.h"
+#include <ctime>
+#include <iostream>
 
 namespace jalo {
 
@@ -216,6 +218,20 @@ void Room::show2D() {
     cv::imshow("Top View", canvas);
 }
 
+std::string timestring() {
+    time_t rawtime;
+    struct tm * timeinfo;
+    char buffer[80];
+
+    time (&rawtime);
+    timeinfo = localtime(&rawtime);
+
+    strftime(buffer,sizeof(buffer),"%d-%m-%Y %H:%M:%S",timeinfo);
+    std::string str(buffer);
+
+    return str;
+}
+
 void Room::dumpToDB() {
     for (auto & person : people) {
         sql::PreparedStatement *pstmt;
@@ -231,6 +247,8 @@ void Room::dumpToDB() {
         pstmt->setDouble(6, person.shoulders_dir.y);
         pstmt->execute();
         pstmt->close();
+
+	std::cout << timestring() << "person " << person.position << " -> " << person.target_object << "\n";
     }
 
 }

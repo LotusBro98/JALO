@@ -14,10 +14,11 @@
             var timeout = 15000;
 
             while (true) {
+                await sleep(timeout);
                 window.scroll(0, document.getElementById("slide2").offsetTop);
                 await sleep(timeout);
                 window.scroll(0, document.getElementById("slide1").offsetTop);
-                await sleep(timeout);
+                window.location.reload(true);
             }
         }
     </script>
