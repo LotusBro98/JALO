@@ -45,7 +45,7 @@ public:
     void capture(int skips = 1);
     void detectPeople();
     void intersectShouldersDirectionWithObjects();
-    void dumpToDB();
+    void dumpToDB(time_t timestamp);
     void loadHeatFromDB();
 
     int getObjectHits(std::string name);

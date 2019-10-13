@@ -14,9 +14,9 @@ int main(int argc, char* argv[])
 {
     jalo::Room room;
 
-    if (argc != 2)
+    if (argc != 3)
     {
-        std::cerr << "Usage: ./shoulders  <video_path>\n";
+        std::cerr << "Usage: ./shoulders  <video_path> <start_timestamp>\n";
         return -1;
     }
 
@@ -25,6 +25,9 @@ int main(int argc, char* argv[])
     cv::Mat cammat = jalo::Config::getMat("cameras");
     for (int i = 0; i < cammat.total(); i++)
         cameras.push_back(cammat.at<float>(i));
+
+    time_t start_time = std::stoull(argv[2]);
+    float fps = jalo::Config::getFloat("cam_fps", 25.0f);
 
     std::string models_path = jalo::Config::getString("models_path", "../models");
 
@@ -72,6 +75,7 @@ int main(int argc, char* argv[])
             );
 
     int seq = 0;
+    time_t seq_time = start_time;
     int skips = jalo::Config::getInt("camera_skips", 20);
     while(true) {
         try {
@@ -80,12 +84,17 @@ int main(int argc, char* argv[])
             std::cerr << "\nUnable to capture more. Finishing.\n";
             return 0;
         }
-        std::cout << "\rframe " << seq << "           ";
+        std::cout << "frame " << seq << "           \n";
         fflush(stdout);
-        seq += skips;
+
+        seq_time = start_time + ((float)seq * 1.0f / fps);
+
         room.detectPeople();
         room.intersectShouldersDirectionWithObjects();
-        room.dumpToDB();
+        room.dumpToDB(seq_time);
+
+        seq += skips;
+
         if (jalo::Config::getBool("interactive")) {
             room.showCameras();
             room.show2D();

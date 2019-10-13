@@ -4,6 +4,8 @@
 
 #include "Person.h"
 
+int Person::lastID = 0;
+
 Person::Person() {
     views = 0;
 }
