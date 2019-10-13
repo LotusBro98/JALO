@@ -59,7 +59,12 @@ void Room::capture(int skips) {
 void Room::detectPeople() {
     float shoulder_height = Config::getFloat("shoulder_height", 1.6);
     float person_radius = Config::getFloat("person_radius", 1);
-    std::vector<Person> newPeople;
+    std::vector<Person> newPeople = this->people;
+    for (auto& pers : newPeople)
+    {
+        pers.views = 0;
+    }
+
     for (auto cam : cameras)
     {
         cam->detectPeople();
@@ -78,11 +83,22 @@ void Room::detectPeople() {
                     break;
                 }
             }
-            if (!found)
-                newPeople.push_back(pers);
+            if (!found) {
+                Person newPers = pers;
+                newPers.id = Person::lastID++;
+                newPeople.push_back(newPers);
+            }
         }
     }
-    this->people = newPeople;
+
+    this->people.clear();
+    for (auto& pers : newPeople)
+    {
+        if (pers.views > 0)
+        {
+            this->people.push_back(pers);
+        }
+    }
 }
 
 int Room::getObjectHits(std::string name) {
@@ -188,6 +204,7 @@ void Room::show2D() {
         cv::Point2f tar = person.hit ? (cv::Point2f{person.target.y, person.target.x} + center) * display_scale : pos + cv::Point2f{person.shoulders_dir.y, person.shoulders_dir.x} * display_scale;
         cv::line(canvas, pos, tar, person.hit ? cv::Scalar{0, 255, 255} : cv::Scalar{0, 255, 0});
         cv::circle(canvas, pos, 4, {0, 0, 255}, -1);
+        cv::putText(canvas, "id" + std::to_string(person.id), pos, cv::FONT_HERSHEY_SIMPLEX, 1, {255, 255, 255});
     }
 
     for (auto cam : cameras)
@@ -232,23 +249,31 @@ std::string timestring() {
     return str;
 }
 
-void Room::dumpToDB() {
+void Room::dumpToDB(time_t timestamp) {
+
+    char buffer[80];
+    struct tm * timeinfo = localtime(&timestamp);
+    strftime(buffer,sizeof(buffer),"%Y-%m-%d %H:%M:%S",timeinfo);
+    std::string time_str(buffer);
+
     for (auto & person : people) {
         sql::PreparedStatement *pstmt;
-        pstmt = con->prepareStatement("INSERT INTO jalo_vision.target_data (frame, target, pos_x, pos_y, dir_x, dir_y) VALUES (?,?,?,?,?,?)");
+        pstmt = con->prepareStatement("INSERT INTO jalo_vision.target_data (frame, time, person_id, target, pos_x, pos_y, dir_x, dir_y) VALUES (?,?,?,?,?,?,?,?)");
         pstmt->setInt(1, seq);
+        pstmt->setDateTime(2, time_str);
+        pstmt->setInt(3, person.id);
         if (person.hit)
-            pstmt->setString(2, person.target_object);
+            pstmt->setString(4, person.target_object);
         else
-            pstmt->setNull(2, sql::DataType::VARCHAR);
-        pstmt->setDouble(3, person.position.x);
-        pstmt->setDouble(4, person.position.y);
-        pstmt->setDouble(5, person.shoulders_dir.x);
-        pstmt->setDouble(6, person.shoulders_dir.y);
+            pstmt->setNull(4, sql::DataType::VARCHAR);
+        pstmt->setDouble(5, person.position.x);
+        pstmt->setDouble(6, person.position.y);
+        pstmt->setDouble(7, person.shoulders_dir.x);
+        pstmt->setDouble(8, person.shoulders_dir.y);
         pstmt->execute();
         pstmt->close();
 
-	std::cout << timestring() << "person " << person.position << " -> " << person.target_object << "\n";
+	std::cout << time_str << " person #" << person.id << " " << person.position << " -> " << person.target_object << "\n";
     }
 
 }

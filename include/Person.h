@@ -16,6 +16,9 @@ public:
     cv::Point3f shoulders_dir;
     int views;
 
+    static int lastID;
+    int id;
+
     bool hit;
     cv::Point3f target;
     std::string target_object;
