@@ -12,7 +12,7 @@ import cv2 as cv
 # Create your views here.
 
 history_size = 5000
-MODELS_DIR = os.path.join(os.path.dirname(__file__), "../../../models/shop1_2")
+MODELS_DIR = os.path.join(os.path.dirname(__file__), "../../../models/shop1_3")
 viewport_disp = [0.0, 0.0, 200.0, 150.0]
 viewport = [-6.5, -5.5, 20.0, 15.0]
 
@@ -46,9 +46,46 @@ def reload_models():
         targets[name]["model"] = points
 
 def reload_db():
+    global all_time
+    global consumers_count
+    global mean_visit_time
+
     entries = TargetData.objects.all()
 
+    FPS = 25.0
+    MIN_SECONDS_PER_VISIT = 15
+
     #entries = list(entries)[-history_size:]
+
+    all_visits = []
+    all_time = 0
+
+    visits = {}
+    last_seq = 0
+    entry: TargetData
+    for entry in entries:
+        if entry.frame < last_seq:
+            for visit in visits.values():
+                all_visits.append(visit)
+            visits = {}
+            all_time += 1.0 / FPS * last_seq
+        last_seq = entry.frame
+        # if entry.target is None:
+        #     continue
+        if entry.person_id not in visits:
+            visits[entry.person_id] = []
+        visits[entry.person_id].append(entry.target)
+    for visit in visits.values():
+        all_visits.append(visit)
+    all_time += 1.0 / FPS * last_seq
+
+    all_visits = list(filter(lambda x: len(x) > MIN_SECONDS_PER_VISIT, all_visits))
+    visit_times = list(map(lambda x: len(x), all_visits))
+
+    consumers_count = len(all_visits)
+    mean_visit_time = np.average(visit_times)
+
+    print(consumers_count, all_time, mean_visit_time)
 
     for name in targets:
         targets[name]["hits"] = 0
@@ -91,6 +128,18 @@ def index(request):
     'viewBox="{} {} {} {}" '.format(viewport_disp[0], viewport_disp[1], viewport_disp[2], viewport_disp[3]) + \
     'xml:space="preserve" preserveAspectRatio="none" >'
 
+    drawing_gray = '<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"' + \
+    'x="{}px" y="{}px" '.format(viewport_disp[0], viewport_disp[1])+\
+    'viewBox="{} {} {} {}" '.format(viewport_disp[0], viewport_disp[1], viewport_disp[2], viewport_disp[3]) + \
+    'xml:space="preserve" preserveAspectRatio="none" >'
+
+    ads = []
+    for i in range(8):
+        ads.append(targets["ad"+str(i+1)]["hits"])
+    ads = np.float32(ads)
+    ads = ads / np.sum(ads) * 100
+    ads = np.int32(ads)
+
     for name, data in targets.items():
         heat = data["heat"]
         h0 = 240
@@ -101,6 +150,7 @@ def index(request):
         for (x0, y0), (x1, y1), (x2, y2) in data["model"]:
             # drawing += '<rect id="box" x="{}" y="{}" width="{}" height="{}"/>'.format(x, y, w, h)
             drawing += '<polygon style="fill: {}" id="box" points="{},{} {},{} {},{}"/>\n'.format(color, x0, y0, x1, y1, x2, y2)
+            drawing_gray += '<polygon style="fill: {}" id="box" points="{},{} {},{} {},{}"/>\n'.format("#888888", x0, y0, x1, y1, x2, y2)
 
     # for name, data in targets.items():
     #     xc, yc = data["center"]
@@ -111,5 +161,18 @@ def index(request):
     drawing += "</svg>"
 
     html = html.replace("$$MAP$$", drawing)
+    html = html.replace("$$MAPGRAY$$", drawing_gray)
+
+    html = html.replace("$$TOTAL_VISITS$$", str(consumers_count))
+    html = html.replace("$$TOTAL_TIME$$", str(int(all_time / 360) / 10.0) + " hrs")
+    html = html.replace("$$MEAN_VISIT_TIME$$", str(int(mean_visit_time)) + " sec")
+
+    for i in range(8):
+        html = html.replace("$$AD{}$$".format(i+1), str(ads[i]))
+
+    return HttpResponse(html)
+
+def wrapper(request):
+    html = open(os.path.join(os.path.dirname(__file__), "static/pages/wrapper.html")).read()
 
     return HttpResponse(html)
