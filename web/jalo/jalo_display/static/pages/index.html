@@ -1,33 +1,7 @@
-<html xmlns:z-index="http://www.w3.org/1999/xhtml">
+<html xmlns:z-index="http://www.w3.org/1999/xhtml" xmlns:border-color="http://www.w3.org/1999/xhtml">
 <head>
     <script type="text/javascript" src="static/js/scroll.js"></script>
     <link rel="stylesheet" href="static/css/main.css">
-    <style>
-        html {
-            scroll-behavior: smooth;
-        }
-    </style>
-
-    <script>
-        async function runScroll() {
-
-            var timeout = 15000;
-
-            while (true) {
-                await sleep(timeout);
-                window.scroll(0, document.getElementById("slide2").offsetTop);
-                await sleep(timeout);
-                window.scroll(0, document.getElementById("slide3").offsetTop);
-                await sleep(timeout);
-                window.scroll(0, document.getElementById("slide4").offsetTop);
-                await sleep(timeout);
-                window.scroll(0, document.getElementById("slide5").offsetTop);
-                await sleep(timeout);
-                window.scroll(0, document.getElementById("slide1").offsetTop);
-                window.location.reload(true);
-            }
-        }
-    </script>
 
 </head>
 
@@ -36,16 +10,22 @@
 <!--<body>-->
 
 <div id="slide1">
-    <img style="width: 100%" src="static/images/Slai_774_d08.png" onclick="runScroll()">
+    <img style="width: 100%" src="static/images/JlQQyHAcq8Y.jpg">
 </div>
 
 <div style="height: 100px"></div>
 
 <div style="position: relative" id="slide2">
 
-    <div style="width: 69%; position: absolute; top: 21.3%; left: 0.5%; z-index: auto;">
+    <div style="width: 68%; position: absolute; top: 20.7%; left: 1.85%; z-index: auto;">
         $$MAP$$
     </div>
+
+    <div class="info_label" style="width: 20%; position: absolute; top: 21.5%; right: 3.5%;">$$TOTAL_VISITS$$</div>
+
+    <div class="info_label" style="width: 20%; position: absolute; top: 51.3%; right: 3.5%;">$$TOTAL_TIME$$</div>
+
+    <div class="info_label" style="width: 20%; position: absolute; top: 82%; right: 3.5%;">$$MEAN_VISIT_TIME$$</div>
 
     <div style="width: 100%; position: relative; top: 20%; z-index:auto">
         <img style="width: 100%;" src="static/images/Obschie_pokazateli.png">
@@ -55,7 +35,7 @@
 
 <div style="position: relative" id="slide3">
 
-    <div style="width: 69%; position: absolute; top: 21.3%; left: 0.5%; z-index: auto;">
+    <div style="width: 68%; position: absolute; top: 21.3%; left: 1.9%; z-index: auto;">
         $$MAP$$
     </div>
 
@@ -67,9 +47,20 @@
 
 <div style="position: relative" id="slide4">
 
-    <div style="width: 69%; position: absolute; top: 21.3%; left: 0.5%; z-index: auto;">
-        $$MAP$$
+    <div style="width: 68%; position: absolute; top: 22.5%; left: 1.75%; z-index: auto;">
+        $$MAPGRAY$$
     </div>
+
+    <table style="position: absolute; top: 17.5%; right: 8.2%; height: 74.2%;">
+        <tr><td><div class="info_label">$$AD1$$</div></td></tr>
+        <tr><td><div class="info_label">$$AD2$$</div></td></tr>
+        <tr><td><div class="info_label">$$AD3$$</div></td></tr>
+        <tr><td><div class="info_label">$$AD4$$</div></td></tr>
+        <tr><td><div class="info_label">$$AD5$$</div></td></tr>
+        <tr><td><div class="info_label">$$AD6$$</div></td></tr>
+        <tr><td><div class="info_label">$$AD7$$</div></td></tr>
+        <tr><td><div class="info_label">$$AD8$$</div></td></tr>
+    </table>
 
     <div style="width: 100%; position: relative; top: 20%; z-index:auto">
         <img style="width: 100%;" src="static/images/Tsifry.png">

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JALO</title>
+    <script>
+        function sleep(ms) {
+          return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function waitReload(){
+            while (true) {
+                await sleep(80100);
+                document.getElementById("frame").contentWindow.location.reload(true);
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body onload="waitReload()">
+    <iframe src="/" id="frame" style="position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;"></iframe>
+</body>
+</html>
